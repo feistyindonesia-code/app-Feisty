@@ -79,27 +79,18 @@ jobs:
           supabase functions deploy create-payment --project-ref ${{ env.SUPABASE_PROJECT_REF }}
           supabase functions deploy notify-outlet --project-ref ${{ env.SUPABASE_PROJECT_REF }}
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+      - name: Deploy frontend to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          enablement: true
-          # Optionally provide a Personal Access Token with admin repo permissions
-          # If `PAGES_PAT` secret is set, the action will use it to enable Pages.
-          github-token: ${{ secrets.PAGES_PAT }}
-
-      - name: Upload artifact to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "frontend"
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v3
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend
+          publish_branch: gh-pages
+          keep_files: false
 
       - name: Deployment Summary
         run: |
           echo "✅ Deployment completed successfully!"
-          echo "🌐 Frontend: https://${{ github.repository_owner }}.github.io/feisty-app"
+          echo "🌐 Frontend (gh-pages): https://${{ github.repository_owner }}.github.io/feisty-app"
           echo "☁️ Backend: Supabase project ${{ env.SUPABASE_PROJECT_REF }}"
           echo "📦 Migrations: Deployed"
           echo "⚡ Edge Functions: Deployed"
