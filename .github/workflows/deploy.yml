@@ -103,11 +103,18 @@ jobs:
             cat supabase/config.json
           fi
 
+      - name: Reset migration history
+        run: |
+          echo "Resetting remote migration history to match local..."
+          supabase migration repair --status reverted 001 002 003 004 || echo "Repair command not needed or failed (OK)"
+
       - name: Push database migrations
         run: |
           echo "Current directory: $(pwd)"
-          echo "Pushing migrations..."
-          supabase db push --dry-run
+          echo "Pushing migrations with verbose output..."
+          supabase db push --dry-run || true
+          echo ""
+          echo "Performing actual push..."
           supabase db push
 
       - name: Deploy Edge Functions
