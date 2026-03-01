@@ -76,8 +76,19 @@ jobs:
           supabase link --project-ref ${{ env.SUPABASE_PROJECT_REF }} \
             --password ${{ env.SUPABASE_DB_PASSWORD }}
 
+      - name: Debug migrations
+        run: |
+          echo "Listing migrations directory:"
+          ls -la supabase/migrations/
+          echo "Supabase config:"
+          cat supabase/config.json
+
       - name: Push database migrations
-        run: supabase db push
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Pushing migrations..."
+          supabase db push --dry-run
+          supabase db push
 
       - name: Deploy Edge Functions
         run: |
