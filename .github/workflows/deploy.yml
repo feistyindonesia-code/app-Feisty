@@ -83,6 +83,9 @@ jobs:
         uses: actions/configure-pages@v4
         with:
           enablement: true
+          # Optionally provide a Personal Access Token with admin repo permissions
+          # If `PAGES_PAT` secret is set, the action will use it to enable Pages.
+          github-token: ${{ secrets.PAGES_PAT }}
 
       - name: Upload artifact to GitHub Pages
         uses: actions/upload-pages-artifact@v3
