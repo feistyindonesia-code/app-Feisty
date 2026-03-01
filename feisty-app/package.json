@@ -1,0 +1,33 @@
+{
+  "name": "feisty-v2",
+  "version": "1.0.0",
+  "description": "Production-ready digital ecosystem for FEISTY multi-outlet F&B brand",
+  "main": "index.js",
+  "scripts": {
+    "dev": "supabase start",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "functions:deploy": "supabase functions deploy --project-ref $SUPABASE_PROJECT_REF",
+    "functions:serve": "supabase functions serve",
+    "build": "echo 'Static site - no build needed'",
+    "deploy": "npm run db:push && npm run functions:deploy && git push origin main",
+    "lint": "echo 'Add linting tools as needed'",
+    "test": "echo 'Add testing framework as needed'",
+    "setup": "npm install && supabase link --project-ref $SUPABASE_PROJECT_REF"
+  },
+  "keywords": [
+    "feisty",
+    "f&b",
+    "order-management",
+    "whatsapp",
+    "supabase",
+    "edge-functions",
+    "pos-system"
+  ],
+  "author": "Feisty Team",
+  "license": "MIT",
+  "devDependencies": {
+    "supabase": "^1.165.0"
+  },
+  "dependencies": {}
+}

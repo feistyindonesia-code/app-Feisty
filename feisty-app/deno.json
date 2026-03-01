@@ -1,0 +1,15 @@
+{
+  "tasks": {
+    "deploy": "supabase functions deploy --project-ref $SUPABASE_PROJECT_REF",
+    "serve": "supabase functions serve",
+    "test": "deno test --allow-all"
+  },
+  "imports": {
+    "std/": "https://deno.land/std@0.168.0/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.47.0"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2020"
+  }
+}

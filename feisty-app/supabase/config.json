@@ -1,0 +1,70 @@
+{
+  "api": {
+    "port": 54321,
+    "schemas": ["public", "graphql_public"],
+    "defaultSchema": "public",
+    "logLevel": "info",
+    "maxRows": 1000
+  },
+  "db": {
+    "port": 54322,
+    "poolMode": "transaction",
+    "maxPoolSize": 20,
+    "ssl": false
+  },
+  "realtime": {
+    "enabled": true,
+    "maxConnections": 100,
+    "maxMessageSize": 1048576,
+    "logLevel": "info"
+  },
+  "auth": {
+    "enabled": true,
+    "port": 54321,
+    "site_url": "http://localhost:3000",
+    "additional_redirect_urls": ["http://localhost:3001"]
+  },
+  "storage": {
+    "enabled": true,
+    "file_size_limit": 52428800,
+    "s3": {
+      "protocol": "http",
+      "hostname": "localhost",
+      "port": 54321,
+      "region": "local",
+      "rootPath": "/storage/v1/s3"
+    }
+  },
+  "functions": [
+    {
+      "id": "whatsapp-webhook",
+      "port": 54321,
+      "verify_jwt": false
+    },
+    {
+      "id": "ai-dispatcher",
+      "port": 54321,
+      "verify_jwt": false
+    },
+    {
+      "id": "create-order",
+      "port": 54321,
+      "verify_jwt": false
+    },
+    {
+      "id": "update-order-status",
+      "port": 54321,
+      "verify_jwt": false
+    },
+    {
+      "id": "create-payment",
+      "port": 54321,
+      "verify_jwt": false
+    },
+    {
+      "id": "notify-outlet",
+      "port": 54321,
+      "verify_jwt": false
+    }
+  ]
+}

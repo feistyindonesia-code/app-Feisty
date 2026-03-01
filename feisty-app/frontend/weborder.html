@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Order - Feisty</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f5f5f5;
+      }
+
+      header {
+        background: white;
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-size: 1.5em;
+        color: #667eea;
+        font-weight: bold;
+      }
+
+      main {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 0 16px;
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 20px;
+      }
+
+      .menu-section {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .category-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+      }
+
+      .category-tab {
+        padding: 8px 16px;
+        border: 2px solid #e0e0e0;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+      }
+
+      .category-tab.active {
+        border-color: #667eea;
+        background: #667eea;
+        color: white;
+      }
+
+      .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+      }
+
+      .product-card {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .product-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .product-image {
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3em;
+      }
+
+      .product-info {
+        padding: 12px;
+      }
+
+      .product-name {
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: #333;
+      }
+
+      .product-price {
+        color: #667eea;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .product-description {
+        font-size: 0.85em;
+        color: #666;
+        margin-bottom: 8px;
+      }
+
+      .add-to-cart-btn {
+        width: 100%;
+        padding: 8px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .add-to-cart-btn:hover {
+        background: #764ba2;
+      }
+
+      .cart-sidebar {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        height: fit-content;
+        position: sticky;
+        top: 100px;
+      }
+
+      .cart-title {
+        font-size: 1.2em;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: #333;
+      }
+
+      .cart-items {
+        max-height: 400px;
+        overflow-y: auto;
+        margin-bottom: 16px;
+      }
+
+      .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .cart-item-details {
+        flex: 1;
+      }
+
+      .cart-item-name {
+        font-weight: 600;
+        font-size: 0.9em;
+        color: #333;
+      }
+
+      .cart-item-qty {
+        color: #667eea;
+        font-weight: 600;
+      }
+
+      .cart-item-price {
+        color: #333;
+        font-weight: 600;
+      }
+
+      .cart-summary {
+        padding-top: 16px;
+        border-top: 2px solid #e0e0e0;
+      }
+
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.95em;
+      }
+
+      .summary-row.total {
+        font-size: 1.1em;
+        font-weight: 700;
+        color: #667eea;
+        margin-top: 12px;
+      }
+
+      .checkout-btn {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 16px;
+        transition: all 0.3s ease;
+      }
+
+      .checkout-btn:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+
+        .cart-sidebar {
+          position: relative;
+          top: 0;
+        }
+
+        .products-grid {
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-content">
+        <div class="logo">🔥 Feisty Web Order</div>
+        <div id="toast" style="display: none"></div>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <div class="menu-section">
+          <div class="category-tabs">
+            <div class="category-tab active" data-category="all">
+              Semua
+            </div>
+            <div class="category-tab" data-category="main">Makanan Utama</div>
+            <div class="category-tab" data-category="drink">Minuman</div>
+            <div class="category-tab" data-category="dessert">Dessert</div>
+          </div>
+
+          <div class="products-grid" id="products-grid">
+            <!-- Products will be loaded here -->
+          </div>
+        </div>
+
+        <div class="cart-sidebar">
+          <div class="cart-title">
+            🛒 Cart
+            <span id="cart-count" style="color: #667eea">(0)</span>
+          </div>
+
+          <div class="cart-items" id="cart-items">
+            <div class="empty-state">Cart kosong</div>
+          </div>
+
+          <div class="cart-summary">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span id="subtotal">Rp 0</span>
+            </div>
+            <div class="summary-row">
+              <span>Tax (10%)</span>
+              <span id="tax">Rp 0</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total</span>
+              <span id="total">Rp 0</span>
+            </div>
+          </div>
+
+          <button class="checkout-btn" onclick="checkout()">
+            Checkout
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Mock data
+      const products = [
+        {
+          id: "1",
+          name: "Burger Spesial",
+          price: 45000,
+          category: "main",
+          emoji: "🍔",
+          description: "Daging premium dengan saus spesial",
+        },
+        {
+          id: "2",
+          name: "Nasi Goreng",
+          price: 35000,
+          category: "main",
+          emoji: "🍚",
+          description: "Nasi goreng dengan telur dan sayuran",
+        },
+        {
+          id: "3",
+          name: "Iced Coffee",
+          price: 25000,
+          category: "drink",
+          emoji: "☕",
+          description: "Kopi premium es dingin",
+        },
+        {
+          id: "4",
+          name: "Smoothie Mangga",
+          price: 28000,
+          category: "drink",
+          emoji: "🥤",
+          description: "Mangga segar tanpa gula tambahan",
+        },
+        {
+          id: "5",
+          name: "Tiramisu",
+          price: 32000,
+          category: "dessert",
+          emoji: "🍰",
+          description: "Tiramisu klasik Italia",
+        },
+      ];
+
+      let cart = {};
+      let currentCategory = "all";
+
+      function renderProducts() {
+        const grid = document.getElementById("products-grid");
+        grid.innerHTML = "";
+
+        const filtered =
+          currentCategory === "all"
+            ? products
+            : products.filter((p) => p.category === currentCategory);
+
+        filtered.forEach((product) => {
+          const card = document.createElement("div");
+          card.className = "product-card";
+          card.innerHTML = `
+            <div class="product-image">${product.emoji}</div>
+            <div class="product-info">
+              <div class="product-name">${product.name}</div>
+              <div class="product-price">Rp ${product.price.toLocaleString()}</div>
+              <div class="product-description">${product.description}</div>
+              <button class="add-to-cart-btn" onclick="addToCart('${product.id}')">
+                Tambah
+              </button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      }
+
+      function addToCart(productId) {
+        const product = products.find((p) => p.id === productId);
+        if (!product) return;
+
+        if (cart[productId]) {
+          cart[productId].quantity++;
+        } else {
+          cart[productId] = {
+            ...product,
+            quantity: 1,
+          };
+        }
+
+        updateCart();
+        showToast("Ditambahkan ke cart!");
+      }
+
+      function updateCart() {
+        const itemsContainer = document.getElementById("cart-items");
+        const items = Object.values(cart);
+
+        if (items.length === 0) {
+          itemsContainer.innerHTML = '<div class="empty-state">Cart kosong</div>';
+          document.getElementById("cart-count").textContent = "(0)";
+          document.getElementById("subtotal").textContent = "Rp 0";
+          document.getElementById("tax").textContent = "Rp 0";
+          document.getElementById("total").textContent = "Rp 0";
+          return;
+        }
+
+        itemsContainer.innerHTML = items
+          .map(
+            (item) => `
+          <div class="cart-item">
+            <div class="cart-item-details">
+              <div class="cart-item-name">${item.name}</div>
+              <div class="cart-item-qty">x${item.quantity}</div>
+            </div>
+            <div class="cart-item-price">
+              Rp ${(item.price * item.quantity).toLocaleString()}
+            </div>
+          </div>
+        `
+          )
+          .join("");
+
+        const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const tax = Math.round(subtotal * 0.1);
+        const total = subtotal + tax;
+
+        document.getElementById("cart-count").textContent = `(${items.length})`;
+        document.getElementById("subtotal").textContent = `Rp ${subtotal.toLocaleString()}`;
+        document.getElementById("tax").textContent = `Rp ${tax.toLocaleString()}`;
+        document.getElementById("total").textContent = `Rp ${total.toLocaleString()}`;
+      }
+
+      function checkout() {
+        if (Object.keys(cart).length === 0) {
+          showToast("Cart masih kosong!");
+          return;
+        }
+
+        // In production, call create-order API
+        showToast("Pesanan berhasil dibuat! Silakan hubungi store kami.");
+        cart = {};
+        updateCart();
+      }
+
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.style.display = "block";
+        setTimeout(() => {
+          toast.style.display = "none";
+        }, 3000);
+      }
+
+      // Event listeners for category tabs
+      document.querySelectorAll(".category-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document
+            .querySelectorAll(".category-tab")
+            .forEach((t) => t.classList.remove("active"));
+          tab.classList.add("active");
+          currentCategory = tab.dataset.category;
+          renderProducts();
+        });
+      });
+
+      // Initial render
+      renderProducts();
+    </script>
+  </body>
+</html>
