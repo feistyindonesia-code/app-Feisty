@@ -38,6 +38,14 @@ jobs:
       - name: Install Supabase CLI
         run: npm install -g supabase
 
+      - name: Supabase login
+        run: |
+          if [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
+            echo "SUPABASE_ACCESS_TOKEN secret is not set" >&2
+            exit 1
+          fi
+          supabase login --token ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
       - name: Link Supabase project
         run: |
           supabase link --project-ref ${{ env.SUPABASE_PROJECT_REF }} \
