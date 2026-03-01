@@ -49,10 +49,18 @@ jobs:
           fi
           URL="https://github.com/supabase/cli/releases/latest/download/supabase_${ASSET}.tar.gz"
           echo "Downloading $URL"
-          curl -sSL "$URL" -o supabase.tar.gz
-          sudo tar -xzf supabase.tar.gz -C /usr/local/bin supabase || sudo tar -xzf supabase.tar.gz -C /usr/local/bin
+          curl -sSL -L "$URL" -o supabase.tar.gz
+          if ! file supabase.tar.gz | grep -q "gzip\|tar"; then
+            echo "Downloaded file is not a valid tar.gz. Content:"
+            file supabase.tar.gz
+            head -c 100 supabase.tar.gz
+            exit 1
+          fi
+          tar -xzf supabase.tar.gz
+          chmod +x supabase
+          sudo mv supabase /usr/local/bin/
           rm -f supabase.tar.gz
-          supabase --version || true
+          supabase --version
 
       - name: Supabase login
         run: |
