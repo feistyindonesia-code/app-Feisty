@@ -36,7 +36,23 @@ jobs:
           fi
 
       - name: Install Supabase CLI
-        run: npm install -g supabase
+        run: |
+          set -e
+          echo "Installing Supabase CLI via GitHub releases"
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then
+            ASSET="linux_amd64"
+          elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+            ASSET="linux_arm64"
+          else
+            ASSET="linux_amd64"
+          fi
+          URL="https://github.com/supabase/cli/releases/latest/download/supabase_${ASSET}.tar.gz"
+          echo "Downloading $URL"
+          curl -sSL "$URL" -o supabase.tar.gz
+          sudo tar -xzf supabase.tar.gz -C /usr/local/bin supabase || sudo tar -xzf supabase.tar.gz -C /usr/local/bin
+          rm -f supabase.tar.gz
+          supabase --version || true
 
       - name: Supabase login
         run: |
