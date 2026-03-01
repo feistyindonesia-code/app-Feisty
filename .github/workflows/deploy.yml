@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -78,10 +80,28 @@ jobs:
 
       - name: Debug migrations
         run: |
-          echo "Listing migrations directory:"
-          ls -la supabase/migrations/
+          echo "Current directory: $(pwd)"
+          echo "Listing root directory:"
+          ls -la
+          echo ""
+          echo "Checking supabase directory:"
+          if [ -d supabase ]; then
+            echo "supabase/ exists - listing contents:"
+            ls -la supabase/
+            if [ -d supabase/migrations ]; then
+              echo "supabase/migrations/ exists - listing contents:"
+              ls -la supabase/migrations/
+            else
+              echo "ERROR: supabase/migrations/ does NOT exist"
+            fi
+          else
+            echo "ERROR: supabase/ directory does NOT exist"
+          fi
+          echo ""
           echo "Supabase config:"
-          cat supabase/config.json
+          if [ -f supabase/config.json ]; then
+            cat supabase/config.json
+          fi
 
       - name: Push database migrations
         run: |
