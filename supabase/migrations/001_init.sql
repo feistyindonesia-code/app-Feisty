@@ -1,7 +1,16 @@
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "postgis";
-CREATE EXTENSION IF NOT EXISTS "pgtrgm";
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'pg_trgm') THEN
+    CREATE EXTENSION IF NOT EXISTS pg_trgm;
+  ELSE
+    RAISE NOTICE 'Extension pg_trgm not available on this server, skipping pg_trgm creation.';
+  END IF;
+END
+$$;
 
 -- ============================================================================
 -- ENUMS
