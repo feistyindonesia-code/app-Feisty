@@ -119,6 +119,26 @@ jobs:
 
       - name: Deploy Edge Functions
         run: |
+          echo "Checking function files before deployment..."
+          if [ -d supabase/functions ]; then
+            echo "supabase/functions/ exists"
+            ls -la supabase/functions/
+            echo ""
+            for func_dir in supabase/functions/*/; do
+              func_name=$(basename "$func_dir")
+              if [ -f "$func_dir/index.ts" ]; then
+                echo "✓ $func_name/index.ts exists"
+              else
+                echo "✗ $func_name/index.ts NOT FOUND"
+                ls -la "$func_dir" || echo "Directory not accessible"
+              fi
+            done
+            echo ""
+            echo "Deploying functions..."
+          else
+            echo "ERROR: supabase/functions/ directory not found!"
+            exit 1
+          fi
           supabase functions deploy whatsapp-webhook --project-ref ${{ env.SUPABASE_PROJECT_REF }}
           supabase functions deploy ai-dispatcher --project-ref ${{ env.SUPABASE_PROJECT_REF }}
           supabase functions deploy create-order --project-ref ${{ env.SUPABASE_PROJECT_REF }}
