@@ -23,41 +23,35 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: main
 
       - name: Verify checkout
         run: |
           echo "=== POST-CHECKOUT DIAGNOSTICS ==="
           echo "Current directory: $(pwd)"
+          echo "Git HEAD: $(git rev-parse HEAD)"
+          echo "Git branch: $(git rev-parse --abbrev-ref HEAD)"
+          echo ""
           echo "Working directory contents:"
           ls -la
-          echo ""
-          echo "Git status:"
-          git status --short
           echo ""
           echo "Checking supabase directory:"
           if [ -d supabase ]; then
             echo "✓ supabase/ exists"
             ls -la supabase/
           else
-            echo "✗ supabase/ NOT FOUND"
+            echo "✗ supabase/ NOT FOUND - attempting restore"
+            git checkout HEAD -- supabase/ 2>&1 || true
+            if [ -d supabase ]; then
+              echo "✓ Successfully restored"
+              ls -la supabase/
+            else
+              echo "✗ Restore FAILED"
+            fi
           fi
           echo ""
-          echo "Git tracked files in supabase/ (from tree):"
-          git ls-tree -r HEAD supabase/
-          echo ""
-          echo "GIT LS-FILES in supabase/:"
-          git ls-files supabase/
-          echo ""
-          echo "Checking git status of supabase/:"
-          git status supabase/
-          echo ""
-          echo "If supabase directory missing, restoring from HEAD:"
-          if [ ! -d supabase ]; then
-            echo "Restoring supabase/ from git..."
-            git checkout HEAD -- supabase/
-            echo "After restore:"
-            ls -la supabase/
-          fi
+          echo "Git tracked files in supabase/ (from HEAD tree):"
+          git ls-tree -r HEAD supabase/ | head -20
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -151,6 +145,32 @@ jobs:
           echo ""
           echo "Performing actual push..."
           supabase db push
+
+      - name: Pre-deployment file check
+        run: |
+          echo "=== PRE-DEPLOYMENT FILE CHECK ==="
+          echo "Current working directory: $(pwd)"
+          echo ""
+          echo "Root directory contents:"
+          ls -la
+          echo ""
+          if [ -d supabase ]; then
+            echo "✓ supabase/ exists"
+            echo "  Contents:"
+            ls -la supabase/
+            if [ -d supabase/functions ]; then
+              echo "✓ supabase/functions/ exists"
+              ls -la supabase/functions/
+            else
+              echo "✗ supabase/functions/ MISSING!"
+            fi
+          else
+            echo "✗ supabase/ directory MISSING!"
+            echo "Attempting aggressive restoration..."
+            git status
+            git log --oneline -1
+            git ls-files supabase/ | head
+          fi
 
       - name: Deploy Edge Functions
         run: |
