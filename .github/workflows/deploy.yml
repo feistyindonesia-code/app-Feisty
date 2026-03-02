@@ -42,8 +42,22 @@ jobs:
             echo "✗ supabase/ NOT FOUND"
           fi
           echo ""
-          echo "Tracked files in supabase/:"
-          git ls-tree -r HEAD supabase/ | head -20
+          echo "Git tracked files in supabase/ (from tree):"
+          git ls-tree -r HEAD supabase/
+          echo ""
+          echo "GIT LS-FILES in supabase/:"
+          git ls-files supabase/
+          echo ""
+          echo "Checking git status of supabase/:"
+          git status supabase/
+          echo ""
+          echo "If supabase directory missing, restoring from HEAD:"
+          if [ ! -d supabase ]; then
+            echo "Restoring supabase/ from git..."
+            git checkout HEAD -- supabase/
+            echo "After restore:"
+            ls -la supabase/
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
