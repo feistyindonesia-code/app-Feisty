@@ -277,7 +277,7 @@ git push origin main
 ```json
 {
   "message": "Berapa harga burger?",
-  "phone_number": "6281234567890",
+  "phone_number": "6287787655880",
   "device_id": "device-uuid",
   "organization_id": "org-uuid"
 }
@@ -303,7 +303,7 @@ git push origin main
 {
   "outlet_id": "outlet-uuid",
   "customer_name": "John Doe",
-  "customer_phone": "6281234567890",
+  "customer_phone": "6287787655880",
   "delivery_address": "Jl. Sudirman No.1",
   "delivery_latitude": -6.1751,
   "delivery_longitude": 106.8249,
@@ -432,7 +432,7 @@ INSERT INTO whatsapp_devices (
   organization_id, outlet_id, device_id, phone_number, 
   access_token, is_central, is_active
 ) VALUES (
-  'org-uuid', 'outlet-uuid', 'device-123', '6281234567890',
+  'org-uuid', 'outlet-uuid', 'device-123', '6287787655880',
   'token-xyz', false, true
 );
 ```
