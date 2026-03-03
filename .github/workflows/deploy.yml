@@ -58,6 +58,12 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v4
+        with:
+          branch: gh-pages
+          folder: /
+
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ] || [ -f yarn.lock ]; then
