@@ -179,40 +179,19 @@
     <div class="container">
       <div class="logo">🔥</div>
       <h1>FEISTY</h1>
-      <p class="subtitle">Enterprise Digital Ecosystem for Multi-Outlet F&B</p>
+      <p class="subtitle">Enterprise digital ecosystem for F&B multi-outlet.</p>
 
-      <div class="feature-grid">
-        <div class="feature-card">
-          <h3>📦 Order Management</h3>
-          <p>Multi-channel ordering via web, WhatsApp, dan POS system</p>
-        </div>
-        <div class="feature-card">
-          <h3>🗺️ Geo-Delivery</h3>
-          <p>Polygon coverage zones dengan real-time delivery tracking</p>
-        </div>
-        <div class="feature-card">
-          <h3>💬 WhatsApp Integration</h3>
-          <p>Central device dengan outlet devices untuk komunikasi efisien</p>
-        </div>
-        <div class="feature-card">
-          <h3>🧠 AI Brain</h3>
-          <p>Intent classification dengan OpenAI structured tool calling</p>
-        </div>
-        <div class="feature-card">
-          <h3>🎁 Referral System</h3>
-          <p>Complete referral program dengan rewards tracking</p>
-        </div>
-        <div class="feature-card">
-          <h3>📊 Analytics</h3>
-          <p>Comprehensive reporting dan business intelligence</p>
-        </div>
-      </div>
+      <p>
+        Welcome to Feisty! Our platform empowers food & beverage brands with
+        seamless digital ordering, WhatsApp integration, geo-delivery and
+        AI-driven insights. Rather than ordering directly from the web site,
+        please chat with our automated bot on WhatsApp to be guided through the
+        experience.
+      </p>
 
       <div class="button-group">
-        <a href="weborder.html" class="btn btn-primary">🛒 Web Order</a>
-        <a href="pos.html" class="btn btn-primary">🏪 POS System</a>
-        <a href="https://supabase.io" class="btn btn-secondary" target="_blank"
-          >📚 Docs</a
+        <a href="https://wa.me/6281234567890" class="btn btn-primary"
+          >💬 Chat on WhatsApp</a
         >
       </div>
 
@@ -230,7 +209,6 @@
           <span class="tech-badge">PostgreSQL</span>
           <span class="tech-badge">PostGIS</span>
           <span class="tech-badge">Deno</span>
-          <span class="tech-badge">GitHub Pages</span>
           <span class="tech-badge">WhatsApp API</span>
           <span class="tech-badge">OpenAI</span>
           <span class="tech-badge">TypeScript</span>
@@ -242,6 +220,11 @@
       // Set deployment time
       const deployTime = new Date().toLocaleString("id-ID");
       document.getElementById("deploy-time").textContent = deployTime;
+
+      // automatically redirect to WhatsApp after a few seconds
+      setTimeout(() => {
+        window.location.href = "https://wa.me/6281234567890";
+      }, 5000);
     </script>
   </body>
 </html>
