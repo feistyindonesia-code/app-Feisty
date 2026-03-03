@@ -1,5 +1,9 @@
 # Feisty V2 - Production Ready Architecture
 
+> 🔗 **Frontend live:** [https://feistyindonesia-code.github.io/feisty-app/](https://feistyindonesia-code.github.io/feisty-app/)
+> 
+> *Repo root shows this README; open the URL above to view the user-facing website.*
+
 ## 🔥 Project Overview
 
 Feisty V2 adalah sistem digital terintegrasi enterprise-grade untuk brand F&B multi-outlet. Dibangun dengan teknologi terkini: Supabase, TypeScript, Edge Functions (Deno), WhatsApp API, dan AI Brain.
