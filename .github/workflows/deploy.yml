@@ -209,6 +209,11 @@ jobs:
           supabase functions deploy create-payment --project-ref ${{ env.SUPABASE_PROJECT_REF }}
           supabase functions deploy notify-outlet --project-ref ${{ env.SUPABASE_PROJECT_REF }}
 
+      - name: Prepare landing page for deploy
+        run: |
+          echo "Copying root index.html into frontend/ (GH Pages only sees that folder)"
+          cp index.html frontend/index.html || true
+
       - name: Deploy frontend to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:

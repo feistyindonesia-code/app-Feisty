@@ -34,7 +34,9 @@ SLACK_WEBHOOK=https://hooks.slack.com/xxx (optional)
 
 ### STEP 5: GitHub Pages Setup
 1. Settings → Pages → Source: Deploy from branch
-2. Branch: `main` → folder: `frontend`
+2. Branch: `main` → folder: `frontend`  
+   _(the landing page lives at repository root; the workflow copies
+   `index.html` into `frontend/` before each deploy)_
 3. Custom domain (optional)
 
 ### STEP 6: First Deployment

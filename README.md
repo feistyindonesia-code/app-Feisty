@@ -2,6 +2,8 @@
 
 > 🔗 **Frontend live:** [https://feistyindonesia-code.github.io/feisty-app/](https://feistyindonesia-code.github.io/feisty-app/)
 > 
+> *(no `/frontend` suffix – the site is published from the root of the `gh‑pages` branch)*
+> 
 > *Repo root shows this README; open the URL above to view the user-facing website.*
 
 ## 🔥 Project Overview
@@ -52,8 +54,8 @@ Feisty V2 adalah sistem digital terintegrasi enterprise-grade untuk brand F&B mu
 ```
 feisty-app/
 │
+├── index.html                    # Landing page (root; edited directly)
 ├── frontend/                       # Static assets (GitHub Pages)
-│   ├── index.html                 # Homepage
 │   ├── weborder.html              # Web ordering interface
 │   ├── pos.html                   # Point of Sales interface
 │   └── assets/                    # Images, CSS, JS
@@ -93,6 +95,10 @@ feisty-app/
 - GitHub Account (untuk deployment)
 - WhatsApp Business Account + Whacenter
 - OpenAI API Key
+
+> **Landing page** is now located at the repository root (`index.html`).  
+> Other static pages remain under `frontend/`; the CI pipeline copies the root
+> file into `frontend/` automatically.
 
 ### 1. Setup Local Development
 
@@ -136,6 +142,13 @@ supabase functions deploy --project-ref YOUR_PROJECT_ID
 ```
 
 ### 4. Deploy Frontend
+
+> **Note:** the landing page lives at the repository root (`index.html`).
+> A copy of this file is automatically placed into `frontend/` during the
+> GitHub Actions deployment step so that the existing workflow continues to
+> publish `frontend/` unchanged.
+
+
 
 ```bash
 # Frontend akan automatically di-deploy ke GitHub Pages
@@ -394,6 +407,10 @@ supabase db push --project-ref YOUR_PROJECT_ID
 supabase functions deploy --project-ref YOUR_PROJECT_ID
 
 # Frontend (via GitHub Pages automatically on main push)
+
+The primary entry point (`index.html`) has been moved to the project root.  
+When you edit the landing page, modify the root file; the CI workflow will
+mirror it into `frontend/` before publishing.
 git push origin main
 ```
 
