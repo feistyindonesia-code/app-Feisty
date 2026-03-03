@@ -36,7 +36,8 @@ SLACK_WEBHOOK=https://hooks.slack.com/xxx (optional)
 1. Settings → Pages → Source: Deploy from branch
 2. Branch: `main` → folder: `frontend`  
    _(the landing page lives at repository root; the workflow copies
-   `index.html` into `frontend/` before each deploy)_
+   `index.html` into `frontend/` before each deploy – landing page now
+   serves as marketing page that redirects visitors to the WhatsApp bot)_
 3. Custom domain (optional)
 
 ### STEP 6: First Deployment

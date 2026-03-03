@@ -10,6 +10,10 @@
 
 Feisty V2 adalah sistem digital terintegrasi enterprise-grade untuk brand F&B multi-outlet. Dibangun dengan teknologi terkini: Supabase, TypeScript, Edge Functions (Deno), WhatsApp API, dan AI Brain.
 
+> **Catatan:** halaman depan (landing page) berfokus pada pengenalan dan pemasaran –
+> pengguna diarahkan ke bot WhatsApp untuk memulai pesanan. Akses antar muka
+> web (order/pos) tetap tersedia di URL terpisah jika diperlukan.
+
 **Status**: ✅ Production Ready
 
 ## 📊 Architecture Overview
@@ -18,8 +22,9 @@ Feisty V2 adalah sistem digital terintegrasi enterprise-grade untuk brand F&B mu
 ┌─────────────────────────────────────────────────────────┐
 │                    USER INTERFACES                      │
 ├──────────────────┬──────────────────┬──────────────────┤
-│  Web Order       │   POS System     │  Mobile (WA)     │
-│  (Static HTML)   │   (Static HTML)  │  (WhatsApp)      │
+│  Landing page     │   POS System     │  Mobile (WA)     │
+│  (marketing +     │   (Static HTML)  │  (WhatsApp bot)  │
+│  WhatsApp redirect)│                  │                  │
 └──────────────────┴──────────────────┴──────────────────┘
                            ↓
 ┌─────────────────────────────────────────────────────────┐
@@ -54,7 +59,7 @@ Feisty V2 adalah sistem digital terintegrasi enterprise-grade untuk brand F&B mu
 ```
 feisty-app/
 │
-├── index.html                    # Landing page (root; edited directly)
+├── index.html                    # Landing page (marketing + WhatsApp redirect; edit here)
 ├── frontend/                       # Static assets (GitHub Pages)
 │   ├── weborder.html              # Web ordering interface
 │   ├── pos.html                   # Point of Sales interface
