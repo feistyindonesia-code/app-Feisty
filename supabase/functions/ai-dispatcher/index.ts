@@ -4,7 +4,71 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "../shared/utils.ts";
-import { sendWhatsAppMessage } from "../shared/whacenter.ts";
+
+// ============================================
+// Whacenter API Helper (embedded for deployment)
+// ============================================
+interface WhacenterMessage {
+  phone: string;
+  message: string;
+}
+
+interface WhacenterResponse {
+  success: boolean;
+  status?: boolean;
+  code?: number;
+  data?: {
+    id?: string;
+    to?: string;
+    message?: string;
+  };
+  error?: string;
+}
+
+function formatPhoneNumber(phone: string): string {
+  let cleaned = phone.replace(/\D/g, '');
+  if (cleaned.startsWith('0')) {
+    cleaned = '62' + cleaned.substring(1);
+  }
+  if (!cleaned.startsWith('62')) {
+    cleaned = '62' + cleaned;
+  }
+  return cleaned;
+}
+
+async function sendWhacenterMessage(
+  deviceId: string,
+  message: WhacenterMessage
+): Promise<WhacenterResponse> {
+  try {
+    const response = await fetch('https://api.whacenter.com/api/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        device_id: deviceId,
+        phone: message.phone,
+        message: message.message,
+      }),
+    });
+    const data = await response.json();
+    if (data.status === true || data.code === 200) {
+      return { success: true, status: data.status, code: data.code, data: data.data };
+    } else {
+      return { success: false, status: data.status, code: data.code, error: data.error || 'Failed to send message' };
+    }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+async function sendWhatsAppMessage(
+  deviceId: string,
+  phone: string,
+  messageText: string
+): Promise<WhacenterResponse> {
+  const formattedPhone = formatPhoneNumber(phone);
+  return sendWhacenterMessage(deviceId, { phone: formattedPhone, message: messageText });
+}
 
 interface AIDispatcherRequest {
   message: string;
