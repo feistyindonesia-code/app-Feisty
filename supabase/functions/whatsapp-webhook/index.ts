@@ -131,6 +131,9 @@ async function sendWhacenterMessage(deviceId: string, phone: string, messageText
   let cleaned = phone.replace(/\D/g, '');
   if (cleaned.startsWith('0')) cleaned = '62' + cleaned.substring(1);
   if (!cleaned.startsWith('62')) cleaned = '62' + cleaned;
+  
+  console.log("Formatted phone for Whacenter:", cleaned);
+  console.log("deviceId:", deviceId);
 
   try {
     const resp = await fetch('https://api.whacenter.com/api/send', {
