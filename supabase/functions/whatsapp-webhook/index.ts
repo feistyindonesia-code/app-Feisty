@@ -179,25 +179,24 @@ serve(async (req: Request) => {
 
     // Call AI dispatcher for processing
     try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/ai-dispatcher`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${supabaseServiceKey}`,
-        },
-        body: JSON.stringify({
+      // Use Supabase client invoke instead of raw fetch
+      const { data, error } = await supabase.functions.invoke('ai-dispatcher', {
+        body: {
           message: messageText,
           phone_number: payload.from,
           device_id: stored?.id,
           organization_id: stored?.organization_id,
           referred_by_code: referredByCode,
-        }),
+        }
       });
 
-      const result = await response.json();
-      console.log("AI Dispatcher response:", result);
+      if (error) {
+        console.error('AI Dispatcher error:', error);
+      } else {
+        console.log('AI Dispatcher response:', data);
+      }
     } catch (e) {
-      console.error("Failed to invoke ai-dispatcher:", e);
+      console.error('Failed to invoke ai-dispatcher:', e);
     }
 
     return new Response(
