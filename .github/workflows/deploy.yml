@@ -204,11 +204,11 @@ jobs:
           # Deploy each function in a safe loop
           for fn in whatsapp-webhook ai-dispatcher create-order update-order-status create-payment notify-outlet notify-customer; do
             echo "Deploying $fn..."
-            supabase functions deploy "$fn" --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt
+            supabase functions deploy "$fn" --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt --use-api
           done
-          supabase functions deploy create-payment --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt
-          supabase functions deploy notify-outlet --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt
-          supabase functions deploy notify-customer --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt
+          supabase functions deploy create-payment --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt --use-api
+          supabase functions deploy notify-outlet --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt --use-api
+          supabase functions deploy notify-customer --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt --use-api
 
       - name: Prepare landing page for deploy
         run: |
