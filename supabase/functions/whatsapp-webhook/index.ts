@@ -227,7 +227,11 @@ serve(async (req: Request) => {
 
     // Parse Whacenter payload - simple format
     // { "from": "6281234567890", "message": "Halo" }
-    const payload: WhacenterPayload = await req.json();
+    const rawBody = await req.text();
+    console.log("Raw request body:", rawBody);
+    
+    const payload: WhacenterPayload = JSON.parse(rawBody);
+    console.log("Parsed payload:", payload);
 
     // Validate required fields
     if (!payload.from || !payload.message) {
