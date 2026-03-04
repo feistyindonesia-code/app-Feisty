@@ -96,16 +96,22 @@ serve(async (req: Request) => {
       console.log("Referral code detected:", referredByCode);
     }
 
-    // Store incoming message in database
+    // Store incoming message in database (organization_id optional)
+    const insertData: any = {
+      phone_number: payload.from,
+      message_type: "text",
+      message_text: messageText,
+      direction: "inbound",
+    };
+    
+    // Only add organization_id if we have it
+    if (organizationId) {
+      insertData.organization_id = organizationId;
+    }
+    
     const { data: stored, error: storeError } = await supabase
       .from("whatsapp_messages")
-      .insert({
-        organization_id: organizationId,
-        phone_number: payload.from,
-        message_type: "text",
-        message_text: messageText,
-        direction: "inbound",
-      })
+      .insert(insertData)
       .select("*")
       .single();
 
