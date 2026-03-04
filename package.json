@@ -27,7 +27,9 @@
   "author": "Feisty Team",
   "license": "MIT",
   "devDependencies": {
-    "supabase": "^1.165.0"
+    // supabase CLI is installed separately in CI/workflow; keeping
+    // it as an npm dependency can trigger a postinstall download that
+    // may fail (see CI error).  Remove this to avoid npm install issues.
   },
   "dependencies": {}
 }

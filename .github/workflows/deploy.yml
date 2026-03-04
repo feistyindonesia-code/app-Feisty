@@ -67,9 +67,9 @@ jobs:
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ] || [ -f yarn.lock ]; then
-            npm ci
+            npm ci --no-audit --no-fund --no-optional
           else
-            npm install --no-audit --no-fund
+            npm install --no-audit --no-fund --no-optional
           fi
 
       - name: Install Supabase CLI

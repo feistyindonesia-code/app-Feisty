@@ -88,6 +88,10 @@ Migrations otomatis dijalankan saat push via GitHub Actions!
 ## 🧪 Testing Edge Functions Locally
 
 ```bash
+# Note: do NOT install the `supabase` CLI via npm; the GitHub
+# workflow handles CLI installation separately to avoid postinstall
+# download errors.
+
 # Terminal 1: Start Supabase
 supabase start
 

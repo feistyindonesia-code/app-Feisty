@@ -122,6 +122,11 @@ cp .env.example .env.local
 
 ### 2. Configure Supabase
 
+> **Note:** do **not** add `supabase` CLI as an npm dependency.  The
+> GitHub Actions workflow installs the CLI directly; the npm package
+> has a noisy postinstall step that often fails (Z_DATA_ERROR).
+
+
 > Public API
 >
 > - **GET /bundles** – lists available bundles (no authentication)
