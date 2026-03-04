@@ -4,6 +4,7 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "../shared/utils.ts";
+import { sendWhacenterMessage, formatSimpleMessage } from "../shared/whacenter.ts";
 
 interface AIDispatcherRequest {
   message: string;
@@ -139,6 +140,18 @@ serve(async (req: Request) => {
       message_text: response,
       direction: "outbound",
     });
+
+    // Send response via Whacenter
+    const whacenterApiKey = Deno.env.get("WHACENTER_API_KEY") || "";
+    const whacenterDeviceKey = Deno.env.get("WHACENTER_DEVICE_KEY") || "";
+    
+    if (whacenterApiKey && whacenterDeviceKey) {
+      const messageData = formatSimpleMessage(requestBody.phone_number, response);
+      const result = await sendWhacenterMessage(whacenterApiKey, whacenterDeviceKey, messageData);
+      console.log("Whacenter send result:", result);
+    } else {
+      console.log("Whacenter not configured, response not sent to:", requestBody.phone_number);
+    }
 
     return new Response(
       JSON.stringify(
