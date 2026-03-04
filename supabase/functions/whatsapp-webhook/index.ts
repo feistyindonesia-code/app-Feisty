@@ -139,7 +139,7 @@ async function sendWhacenterMessage(deviceId: string, phone: string, messageText
     const resp = await fetch('https://api.whacenter.com/api/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ device_id: deviceId, phone: cleaned, message: messageText }),
+      body: JSON.stringify({ device_id: deviceId, number: cleaned, message: messageText }),
     });
     return await resp.json();
   } catch (e) {
