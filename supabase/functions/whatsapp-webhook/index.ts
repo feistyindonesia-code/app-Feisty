@@ -6,122 +6,59 @@ import {
 } from "../shared/utils.ts";
 
 // ============================================
-// AI Dispatcher Logic (embedded)
+// Gemini AI Integration
 // ============================================
 
-interface AIIntent {
-  type: string;
-  confidence: number;
-  parameters: Record<string, any>;
-}
-
-const MARKETING_MESSAGES = {
-  greeting: [
-    "Hai {name}! 👋 Selamat datang di Feisty! Senang bisa kenal dengan kamu. Ada yang bisa kita bantu hari ini?",
-    "Halo {name}! 🌟 Welcome to Feisty! Kami senang sekali kamu sudah bergabung dengan kami. Mau pesan apa hari ini?",
-  ],
-  greeting_no_name: [
-    "Hai! 👋 Selamat datang di Feisty! Senang bisa kenal dengan kamu. Boleh tau nama kamu siapa?",
-    "Halo! 🌟 Welcome to Feisty! Siapa nih namanya?",
-  ],
-  menu: [
-    "📦 *PAKET KAMI:*\n\n{message}\n\n✨ Mau pilih yang mana?",
-  ],
-  order_cta: [
-    "👆 Klik di atas untuk pesan! 🛒",
-    "🔥 Gas order sekarang!",
-  ],
-  referral: [
-    "🎁 *REFERRAL FEISTY*\n\nAjak teman dan dapat komisi!\n\nKetik 'share' untuk dapat link!",
-  ],
-  share_link: [
-    "📤 *LINK REFERRAL KAMU:*\n\nwa.me/6287787655880?text={message}\n\n✨ Bagikan ke teman!",
-  ],
-};
-
-function classifyIntent(message: string): AIIntent {
-  const m = message.toLowerCase().trim();
-  if (/^(halo|hai|hi|hey)/.test(m)) return { type: "greeting", confidence: 0.9, parameters: {} };
-  if (/nama/i.test(m)) return { type: "get_name", confidence: 0.85, parameters: { name: message.trim() } };
-  if (/(menu|paket|makanan)/.test(m)) return { type: "menu_inquiry", confidence: 0.85, parameters: {} };
-  if (/(pesanan|order|status)/.test(m)) return { type: "order_status", confidence: 0.8, parameters: {} };
-  if (/(referral|undang|teman)/.test(m)) return { type: "referral_info", confidence: 0.85, parameters: {} };
-  if (/share|bagian/i.test(m) && /referral/i.test(m)) return { type: "share_referral", confidence: 0.8, parameters: {} };
-  if (/(komplain|keluhan)/.test(m)) return { type: "complaint", confidence: 0.7, parameters: {} };
-  return { type: "unknown", confidence: 0.5, parameters: {} };
-}
-
-function getRandomMessage(msgs: string[]): string {
-  return msgs[Math.floor(Math.random() * msgs.length)];
-}
-
-function formatMessage(template: string, data: Record<string, string>): string {
-  let result = template;
-  for (const [key, value] of Object.entries(data)) {
-    result = result.replace(new RegExp(`{${key}}`, 'g'), value);
-  }
-  return result;
-}
-
-async function generateAIResponse(
-  intent: AIIntent,
-  customer: any,
-  supabase: any,
-  originalMessage: string
-): Promise<string> {
-  // Handle name capture
-  if (intent.type === "get_name") {
-    let name = originalMessage.replace(/^(nama|saya|aku)/i, '').trim();
-    if (name.length < 2) name = originalMessage.trim();
-    
-    await supabase.from("whatsapp_customers").update({ full_name: name }).eq("id", customer.id);
-    return formatMessage(getRandomMessage(MARKETING_MESSAGES.greeting), { name });
+async function callGemini(prompt: string): Promise<string> {
+  const apiKey = Deno.env.get("GOOGLE_AI_API_KEY") || "";
+  if (!apiKey) {
+    return "Maaf, AI belum dikonfigurasi. Coba hubungi admin!";
   }
 
-  // Handle greeting
-  if (intent.type === "greeting") {
-    if (customer.full_name) {
-      return formatMessage(getRandomMessage(MARKETING_MESSAGES.greeting), { name: customer.full_name });
+  const systemPrompt = `Kamu adalah AI assistant untuk Feisty Go International - bisnis food & beverage.
+
+Tugas kamu:
+1. Responsif, friendly, dan membantu
+2. Jika customer bertanya tentang menu/paket, arahkan ke feisty.app/weborder
+3. Jika customer mau pesan, arahkan ke feisty.app/weborder
+4. Jika customer bertanya tentang referral, jelaskan manfaat berbagi link referral
+5. Jika customer komplain, sikap baik dan arahkan ke customer service
+6. Selalu gunakan emoji yang sesuai
+7. Respons dalam Bahasa Indonesia yang natural
+
+Info penting:
+- Nama bisnis: Feisty Go International  
+- Menu: Bisa lihat di feisty.app/weborder
+- Contact: WhatsApp ini
+
+Jawab dengan singkat, max 2 kalimat, kecuali jika customer meminta detail.}`;
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 256,
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+      return data.candidates[0].content.parts[0].text;
     }
-    return getRandomMessage(MARKETING_MESSAGES.greeting_no_name);
+    return "Maaf, ada masalah dengan AI. Coba lagi ya!";
+  } catch (e) {
+    console.error("Gemini error:", e);
+    return "Maaf, AI sedang sibuk. Coba lagi nanti!";
   }
-
-  // Handle menu inquiry
-  if (intent.type === "menu_inquiry") {
-    const { data: bundles } = await supabase.from("bundles").select("name, description").eq("is_active", true).limit(5);
-    if (!bundles || bundles.length === 0) return "Maaf, sedang tidak ada paket tersedia.";
-    
-    let list = bundles.map((b: any, i: number) => `${i+1}. *${b.name}* - ${b.description||''}`).join("\n");
-    return formatMessage(getRandomMessage(MARKETING_MESSAGES.menu), { message: list }) + "\n" + getRandomMessage(MARKETING_MESSAGES.order_cta);
-  }
-
-  // Handle order status
-  if (intent.type === "order_status") {
-    const { data: orders } = await supabase.from("orders").select("order_number, status").eq("customer_phone", customer.phone_number).order("created_at", { ascending: false }).limit(3);
-    if (!orders || orders.length === 0) return "Belum ada pesanan. Mau pesan? feisty.app/weborder";
-    return "📦 *Status:*\n" + orders.map((o: any) => `${o.order_number} - ${o.status}`).join("\n");
-  }
-
-  // Handle referral info
-  if (intent.type === "referral_info") {
-    return getRandomMessage(MARKETING_MESSAGES.referral);
-  }
-
-  // Handle share referral
-  if (intent.type === "share_referral") {
-    const code = customer.my_referral_code || "(belum ada)";
-    const msg = encodeURIComponent(`Coba Feisty! Kode ref: ${code}`);
-    return formatMessage(getRandomMessage(MARKETING_MESSAGES.share_link), { message: msg });
-  }
-
-  // Handle complaint
-  if (intent.type === "complaint") {
-    return "Mohon maaf atas ketidaknyamanan. Ceritakan masalahnya, kami akan bantu! 🙏";
-  }
-
-  // Default
-  if (!customer.full_name) return "Senang chat dengan kamu! Boleh tau nama kamu? 😊";
-  return `Halo ${customer.full_name}! 👋 Ketik 'menu' untuk lihat paket, 'referral' untuk ajak teman!`;
 }
 
 // ============================================
@@ -369,16 +306,19 @@ serve(async (req: Request) => {
       }
     }
 
-    // Process AI response directly (no more invoke needed)
+    // Process AI response with Gemini
     try {
       // Get or create customer
       let customer = await getOrCreateCustomer(supabase, payload.from, referredByCode);
       
-      // Classify intent
-      const intent = classifyIntent(messageText);
+      // Generate response using Gemini
+      const responseText = await callGemini(messageText);
       
-      // Generate response
-      const responseText = await generateAIResponse(intent, customer, supabase, messageText);
+      // Update customer name if they shared it
+      const nameMatch = messageText.match(/nama(?:ku|saya)?\s+([A-Za-z]+)/i);
+      if (nameMatch) {
+        await supabase.from("whatsapp_customers").update({ full_name: nameMatch[1] }).eq("id", customer.id);
+      }
       
       // Update last message
       await supabase.from("whatsapp_customers").update({ last_message_at: new Date().toISOString() }).eq("id", customer.id);
