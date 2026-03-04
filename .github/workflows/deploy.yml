@@ -202,12 +202,13 @@ jobs:
           fi
 
           # Deploy each function in a safe loop
-          for fn in whatsapp-webhook ai-dispatcher create-order update-order-status create-payment notify-outlet; do
+          for fn in whatsapp-webhook ai-dispatcher create-order update-order-status create-payment notify-outlet notify-customer; do
             echo "Deploying $fn..."
             supabase functions deploy "$fn" --project-ref ${{ env.SUPABASE_PROJECT_REF }}
           done
           supabase functions deploy create-payment --project-ref ${{ env.SUPABASE_PROJECT_REF }}
           supabase functions deploy notify-outlet --project-ref ${{ env.SUPABASE_PROJECT_REF }}
+          supabase functions deploy notify-customer --project-ref ${{ env.SUPABASE_PROJECT_REF }}
 
       - name: Prepare landing page for deploy
         run: |

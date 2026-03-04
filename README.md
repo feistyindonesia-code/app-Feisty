@@ -122,6 +122,14 @@ cp .env.example .env.local
 
 ### 2. Configure Supabase
 
+> Public API
+>
+> - **GET /bundles** – lists available bundles (no authentication)
+> - **Other endpoints** (products, orders, payments) require a service role
+>   key or authenticated admin access. Products are hidden from public
+>   interfaces.
+
+
 ```bash
 # Login ke Supabase CLI
 supabase login
@@ -194,7 +202,7 @@ git push origin main
 - is_verified, timestamps
 ```
 
-#### Products
+#### Products (internal only)
 ```sql
 - id (UUID)
 - organization_id, category_id (FK)
@@ -203,6 +211,26 @@ git push origin main
 - image_url, is_available
 - timestamps
 ```
+*Note: products are never exposed via the public API; bundling abstracts them away.*
+
+#### Bundles
+```sql
+- id (UUID)
+- organization_id (FK)
+- name, description, price
+- is_active, timestamps
+```
+Public packages offered to customers; each bundle maps internally to products via `bundle_items`.
+
+#### Area Requests
+```sql
+- id (UUID)
+- customer_name, customer_phone
+- latitude, longitude
+- created_at
+```
+Locations outside delivery zones are recorded here for later follow‑up.
+
 
 #### Orders
 ```sql
@@ -253,7 +281,7 @@ git push origin main
 ## ⚡ Edge Functions
 
 ### 1. whatsapp-webhook
-**Purpose**: Handle incoming WhatsApp messages
+**Purpose**: Handle incoming WhatsApp messages (gateway only – no order logic)
 **Method**: POST
 **Auth**: Webhook signature validation
 **Body**:
@@ -270,7 +298,9 @@ git push origin main
 ```
 
 ### 2. ai-dispatcher
-**Purpose**: Classify user intent & route to appropriate handler
+**Purpose**: Classify user intent (bundles/menu inquiry, order status, etc.)
+
+*Does not create orders and never exposes internal product schema.*
 **Method**: POST
 **Auth**: Bearer token
 **Body**:
@@ -295,26 +325,28 @@ git push origin main
 ```
 
 ### 3. create-order
-**Purpose**: Create new order
+**Purpose**: Create new order (web-only, bundles only)
 **Method**: POST
 **Auth**: Bearer token
 **Body**:
 ```json
 {
-  "outlet_id": "outlet-uuid",
+  "bundle_id": "bundle-uuid",
   "customer_name": "John Doe",
   "customer_phone": "6287787655880",
   "delivery_address": "Jl. Sudirman No.1",
   "delivery_latitude": -6.1751,
   "delivery_longitude": 106.8249,
-  "items": [{
-    "product_id": "prod-uuid",
-    "quantity": 2,
-    "notes": "Not spicy"
-  }],
-  "payment_method": "card"
+  "payment_method": "card",
+  "referral_code": "optional-code"
 }
 ```
+
+- `bundle_id` references a predefined package; individual product details are
+  expanded server‑side and never accepted from the public.
+- If the delivery coordinates fall outside all active zones the request will
+  be recorded in `area_requests` and no order will be created.
+- Referral codes are logged but discounts are not automatically applied yet.
 
 ### 4. update-order-status
 **Purpose**: Update order status
@@ -452,7 +484,7 @@ Verify token: Use WHATSAPP_WEBHOOK_TOKEN dari .env
 
 AI Dispatcher menggunakan OpenAI API untuk classify user intent:
 
-- `menu_inquiry` - Pertanyaan tentang menu/produk
+- `menu_inquiry` - Pertanyaan tentang paket/bundel (only names are shown)
 - `order_status` - Tracking pesanan
 - `create_order` - Mau pesan (redirect ke web)
 - `complaint` - Keluhan/support
@@ -463,16 +495,16 @@ AI Dispatcher menggunakan OpenAI API untuk classify user intent:
 ```typescript
 const tools = [
   {
-    name: "get_menu",
-    description: "Retrieve menu for outlet",
-    parameters: { outlet_id: string }
+    name: "get_bundles",
+    description: "Retrieve public bundles list",
+    parameters: { organization_id: string }
   },
   {
     name: "get_order_status",
     description: "Get order status",
     parameters: { order_id: string }
   },
-  // More tools...
+  // additional internal tools excluded from public intents
 ];
 ```
 

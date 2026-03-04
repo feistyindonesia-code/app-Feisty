@@ -97,11 +97,12 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer Your_Service_Role_Key" \
   -d '{
-    "outlet_id": "outlet-uuid",
+    "bundle_id": "bundle-uuid",
     "customer_name": "John",
-    "customer_phone": "6281234567890",
+    "customer_phone": "6287787655880",
     "delivery_address": "Jl. Test",
-    "items": [{"product_id": "prod-id", "quantity": 1}],
+    "delivery_latitude": -6.2000,
+    "delivery_longitude": 106.8000,
     "payment_method": "card"
   }'
 ```

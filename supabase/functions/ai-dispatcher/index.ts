@@ -277,23 +277,24 @@ async function handleMenuInquiry(
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { data: categories } = await supabase
-      .from("product_categories")
-      .select("*")
+    // only expose bundles to public/whatsapp
+    const { data: bundles } = await supabase
+      .from("bundles")
+      .select("id, name, price")
       .eq("organization_id", organizationId)
       .eq("is_active", true);
 
-    if (!categories || categories.length === 0) {
+    if (!bundles || bundles.length === 0) {
       return "Menu sedang tidak tersedia. Silakan coba lagi nanti.";
     }
 
-    let response = "📋 MENU KAMI:\n\n";
-    categories.forEach((cat, index) => {
-      response += `${index + 1}. ${cat.name}\n`;
+    let response = "📦 PAKET KAMI:\n\n";
+    bundles.forEach((b, index) => {
+      response += `${index + 1}. ${b.name} - Rp ${b.price}\n`;
     });
 
     response +=
-      "\n\nUntuk melihat semua menu dan memesan, kunjungi:\nhttps://feisty.app/weborder";
+      "\n\nUntuk melihat detail dan memesan, kunjungi:\nhttps://feisty.app/weborder";
 
     return response;
   } catch (error) {

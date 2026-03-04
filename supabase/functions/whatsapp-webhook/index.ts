@@ -158,9 +158,24 @@ async function handleIncomingMessage(
       return;
     }
 
-    // Call AI dispatcher for processing
-    // In production, route to ai-dispatcher function
-    console.log("Message stored:", stored.id);
+    // Call AI dispatcher for processing (gateway behaviour only)
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/ai-dispatcher`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({
+          message: message.text?.body || "",
+          phone_number: message.from,
+          device_id: stored.id,
+          organization_id: stored.organization_id,
+        }),
+      });
+    } catch (e) {
+      console.error("Failed to invoke ai-dispatcher:", e);
+    }
   } catch (error) {
     console.error("Error handling incoming message:", error);
   }
