@@ -51,6 +51,9 @@ Jawab dengan singkat, max 2 kalimat, kecuali jika customer meminta detail.}`;
     );
 
     const data = await response.json();
+    console.log("Gemini response status:", response.status);
+    console.log("Gemini response data:", JSON.stringify(data));
+    
     if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
       return data.candidates[0].content.parts[0].text;
     }
