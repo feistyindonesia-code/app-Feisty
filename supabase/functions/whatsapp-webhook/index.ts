@@ -21,6 +21,10 @@ interface WhatsAppWebhookPayload {
           status: string;
           timestamp: number;
         }>;
+        metadata?: {
+          display_phone_number: string;
+          phone_number_id: string;
+        };
       };
     }>;
   }>;
@@ -139,13 +143,25 @@ async function handleIncomingMessage(
   supabaseServiceKey: string
 ): Promise<void> {
   try {
+    // Extract referral code from message if present
+    // Format: "Saya undangan dari Feisty. Gunakan kode referral saya: XXXXX"
+    let referredByCode: string | undefined;
+    const messageText = message.text?.body || "";
+    
+    // Try to extract referral code from message
+    const codeMatch = messageText.match(/kode\s+(?:referral\s+)?[:\s]+([A-Z0-9]{4,10})/i);
+    if (codeMatch) {
+      referredByCode = codeMatch[1].toUpperCase();
+      console.log("Referral code detected:", referredByCode);
+    }
+
     // Store message in database
     const { data: stored, error: storeError } = await supabase
       .from("whatsapp_messages")
       .insert({
         phone_number: message.from,
         message_type: message.type,
-        message_text: message.text?.body,
+        message_text: messageText,
         message_data: message,
         direction: "inbound",
         webhook_id: message.id,
@@ -158,21 +174,62 @@ async function handleIncomingMessage(
       return;
     }
 
-    // Call AI dispatcher for processing (gateway behaviour only)
+    // Check if customer exists and update referral if needed
+    if (referredByCode) {
+      const { data: existingCustomer } = await supabase
+        .from("whatsapp_customers")
+        .select("id, referrer_code")
+        .eq("phone_number", message.from)
+        .single();
+
+      if (existingCustomer && !existingCustomer.referrer_code) {
+        // Update referrer for existing customer
+        await supabase
+          .from("whatsapp_customers")
+          .update({
+            referrer_code: referredByCode,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", existingCustomer.id);
+
+        // Find referrer and increment their referral count
+        const { data: referrer } = await supabase
+          .from("whatsapp_customers")
+          .select("id, total_referrals")
+          .eq("my_referral_code", referredByCode)
+          .single();
+
+        if (referrer) {
+          await supabase
+            .from("whatsapp_customers")
+            .update({
+              total_referrals: (referrer.total_referrals || 0) + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", referrer.id);
+        }
+      }
+    }
+
+    // Call AI dispatcher for processing
     try {
-      await fetch(`${supabaseUrl}/functions/v1/ai-dispatcher`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/ai-dispatcher`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${supabaseServiceKey}`,
+          "Authorization": `Bearer ${supabaseServiceKey}`,
         },
         body: JSON.stringify({
-          message: message.text?.body || "",
+          message: messageText || "",
           phone_number: message.from,
-          device_id: stored.id,
-          organization_id: stored.organization_id,
+          device_id: stored?.id,
+          organization_id: stored?.organization_id,
+          referred_by_code: referredByCode,
         }),
       });
+
+      const result = await response.json();
+      console.log("AI Dispatcher response:", result);
     } catch (e) {
       console.error("Failed to invoke ai-dispatcher:", e);
     }

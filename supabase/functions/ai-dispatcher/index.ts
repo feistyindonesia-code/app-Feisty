@@ -8,21 +8,55 @@ import {
 interface AIDispatcherRequest {
   message: string;
   phone_number: string;
-  device_id: string;
-  organization_id: string;
+  device_id?: string;
+  organization_id?: string;
+  referred_by_code?: string;
 }
 
 interface AIIntent {
   type:
+    | "greeting"
+    | "get_name"
     | "menu_inquiry"
     | "order_status"
     | "create_order"
+    | "referral_info"
+    | "share_referral"
     | "complaint"
     | "support"
     | "unknown";
   confidence: number;
   parameters: Record<string, any>;
 }
+
+// Marketing messages - warm, friendly, persuasive
+const MARKETING_MESSAGES = {
+  greeting: [
+    "Hai {name}! 👋 Selamat datang di Feisty! Senang bisa kenal dengan kamu. Ada yang bisa kita bantu hari ini?",
+    "Halo {name}! 🌟 Welcome to Feisty! Kami senang sekali kamu sudah bergabung dengan kami. Mau pesan apa hari ini?",
+    "Hi {name}! 🎉 Terima kasih sudah menghubungi Feisty! Yuk, siapa tau ada yang kamu suka hari ini?",
+  ],
+  greeting_no_name: [
+    "Hai! 👋 Selamat datang di Feisty! Senang bisa kenal dengan kamu. Boleh tau nama kamu siapa?",
+    "Halo! 🌟 Welcome to Feisty! Kami senang sekali kamu sudah menghubungi kami. Siapa nih namanya?",
+    "Hi! 🎉 Terima kasih sudah chat Feisty! Boleh kenalan dulu, siapa namanya?",
+  ],
+  menu: [
+    "📦 *PAKET KAMI:*\n\n{message}\n\n✨ Semua paket ini sudah termasuk makanan favorit kamu! Mau pilih yang mana? Klik pesanan di atas ya!",
+    "🍔 *MENU PAKET:*\n\n{message}\n\n🎁 Setiap paket sudah disediakan dengan kualitas terbaik untuk kamu!",
+  ],
+  order_cta: [
+    "👆 Klik link di atas untuk pesan sekarang! 🛒",
+    "🔥 Gas order sekarang sebelum kehabisan!",
+    "🎉 Yuk langsung pesan, kamu bakal dapat pengalaman makan yanglezat!",
+  ],
+  referral: [
+    "🎁 *REFFERAL FEISTY*\n\n{names} sudah berbagi kebahagiaan ke {count} teman! Setiap teman yang daftar & pesan lewat link kamu, kamu bakal dapat komisi dari pesanannya! komisi dihitung berdasarkan siapa yang benar2 orderan bukan upline!\n\n📤 Mau share ke teman? Bilang saja:\n'share' atau 'bagikan' ya!",
+  ],
+  share_link: [
+    "📤 *LINK REFERRAL KAMU:*\n\nWa.me/6287787655880?text={message}\n\n✨ Bagikan ke teman kamu dan dapat komisi dari setiap orderan mereka!",
+  ],
+};
 
 serve(async (req: Request) => {
   try {
@@ -48,11 +82,7 @@ serve(async (req: Request) => {
 
     const requestBody: AIDispatcherRequest = await req.json();
 
-    if (
-      !requestBody.message ||
-      !requestBody.phone_number ||
-      !requestBody.device_id
-    ) {
+    if (!requestBody.message || !requestBody.phone_number) {
       return new Response(
         JSON.stringify(
           createErrorResponse("Missing required fields", "MISSING_FIELDS")
@@ -63,7 +93,6 @@ serve(async (req: Request) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    const openaiKey = Deno.env.get("OPENAI_API_KEY") || "";
 
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error("Missing Supabase configuration");
@@ -71,69 +100,40 @@ serve(async (req: Request) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Store incoming message
-    const { data: message, error: messageError } = await supabase
-      .from("whatsapp_messages")
-      .insert({
-        organization_id: requestBody.organization_id,
-        device_id: requestBody.device_id,
-        phone_number: requestBody.phone_number,
-        message_type: "text",
-        message_text: requestBody.message,
-        direction: "inbound",
-      })
-      .select("*")
-      .single();
-
-    if (messageError) {
-      console.error("Error storing message:", messageError);
-    }
-
-    // Classify intent using OpenAI
-    const intent = await classifyIntent(
-      requestBody.message,
-      openaiKey
+    // Get or create customer
+    let customer = await getOrCreateCustomer(
+      supabase,
+      requestBody.phone_number,
+      requestBody.referred_by_code
     );
 
-    // Route to appropriate handler
-    let response: string = "";
+    // Classify intent
+    const intent = await classifyIntent(requestBody.message);
 
-    switch (intent.type) {
-      case "order_status":
-        response = await handleOrderStatus(
-          requestBody.phone_number,
-          supabaseUrl,
-          supabaseServiceKey
-        );
-        break;
+    // Generate response based on intent and customer state
+    let response = await generateResponse(
+      intent,
+      customer,
+      supabaseUrl,
+      supabaseServiceKey,
+      requestBody.message
+    );
 
-      case "menu_inquiry":
-        response = await handleMenuInquiry(
-          requestBody.organization_id,
-          supabaseUrl,
-          supabaseServiceKey
-        );
-        break;
+    // Update last message timestamp
+    await supabase
+      .from("whatsapp_customers")
+      .update({ last_message_at: new Date().toISOString() })
+      .eq("id", customer.id);
 
-      case "create_order":
-        response =
-          "Terima kasih! Untuk membuat pesanan, silakan kunjungi: https://feisty.app/weborder";
-        break;
-
-      case "complaint":
-        response =
-          "Terima kasih atas masukan Anda. Tim support kami siap membantu. Silakan deskripsikan masalahnya.";
-        break;
-
-      default:
-        response =
-          "Halo! Ada yang bisa kami bantu? Silakan pilih:\n1. Status pesanan\n2. Lihat menu\n3. Buat pesanan baru";
-    }
-
-    // Store outgoing message
+    // Store messages
     await supabase.from("whatsapp_messages").insert({
-      organization_id: requestBody.organization_id,
-      device_id: requestBody.device_id,
+      phone_number: requestBody.phone_number,
+      message_type: "text",
+      message_text: requestBody.message,
+      direction: "inbound",
+    });
+
+    await supabase.from("whatsapp_messages").insert({
       phone_number: requestBody.phone_number,
       message_type: "text",
       message_text: response,
@@ -145,7 +145,8 @@ serve(async (req: Request) => {
         createSuccessResponse({
           response,
           intent: intent.type,
-          confidence: intent.confidence,
+          customer_name: customer.full_name,
+          customer_referral_code: customer.my_referral_code,
         })
       ),
       {
@@ -155,6 +156,7 @@ serve(async (req: Request) => {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("AI Dispatcher error:", message);
 
     return new Response(
       JSON.stringify(createErrorResponse(message, "ERROR")),
@@ -166,139 +168,276 @@ serve(async (req: Request) => {
   }
 });
 
-async function classifyIntent(
-  message: string,
-  openaiKey: string
-): Promise<AIIntent> {
-  try {
-    // For production, call OpenAI API with structured outputs
-    // This is a simplified version
-    const keywords = {
-      status: ["pesanan", "order", "status", "dimana"],
-      menu: ["menu", "produk", "harga", "apa saja"],
-      order: ["pesan", "beli", "order", "mau"],
-      complaint: ["komplain", "masalah", "error", "tidak"],
-    };
-
-    const lowerMessage = message.toLowerCase();
-
-    if (
-      keywords.status.some((k) => lowerMessage.includes(k))
-    ) {
-      return {
-        type: "order_status",
-        confidence: 0.8,
-        parameters: {},
-      };
-    }
-
-    if (
-      keywords.menu.some((k) => lowerMessage.includes(k))
-    ) {
-      return {
-        type: "menu_inquiry",
-        confidence: 0.85,
-        parameters: {},
-      };
-    }
-
-    if (
-      keywords.order.some((k) => lowerMessage.includes(k))
-    ) {
-      return {
-        type: "create_order",
-        confidence: 0.75,
-        parameters: {},
-      };
-    }
-
-    if (
-      keywords.complaint.some((k) => lowerMessage.includes(k))
-    ) {
-      return {
-        type: "complaint",
-        confidence: 0.7,
-        parameters: {},
-      };
-    }
-
-    return {
-      type: "unknown",
-      confidence: 0.5,
-      parameters: {},
-    };
-  } catch (error) {
-    console.error("Classification error:", error);
-    return {
-      type: "unknown",
-      confidence: 0.0,
-      parameters: {},
-    };
-  }
-}
-
-async function handleOrderStatus(
+async function getOrCreateCustomer(
+  supabase: any,
   phoneNumber: string,
-  supabaseUrl: string,
-  supabaseServiceKey: string
-): Promise<string> {
-  try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  referredByCode?: string
+): Promise<any> {
+  // Check if customer exists
+  const { data: existing } = await supabase
+    .from("whatsapp_customers")
+    .select("*")
+    .eq("phone_number", phoneNumber)
+    .single();
 
-    const { data: orders, error } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("customer_phone", phoneNumber)
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    if (error || !orders || orders.length === 0) {
-      return "Maaf, kami tidak menemukan pesanan dengan nomor telepon ini.";
-    }
-
-    let response = "Pesanan Anda:\n\n";
-    orders.forEach((order, index) => {
-      response += `${index + 1}. ${order.order_number} - Rp ${order
-        .total} (Status: ${order.status})\n`;
-    });
-
-    return response;
-  } catch (error) {
-    console.error("Order status error:", error);
-    return"Maaf, terjadi kesalahan. Silakan coba lagi nanti.";
+  if (existing) {
+    return existing;
   }
+
+  // Find referrer if code provided
+  let referrerId = null;
+  let referrerData = null;
+
+  if (referredByCode) {
+    const { data: referrer } = await supabase
+      .from("whatsapp_customers")
+      .select("id, full_name")
+      .eq("my_referral_code", referredByCode)
+      .single();
+
+    if (referrer) {
+      referrerId = referrer.id;
+      referrerData = referrer;
+    }
+  }
+
+  // Create new customer
+  const { data: newCustomer, error } = await supabase
+    .from("whatsapp_customers")
+    .insert({
+      phone_number: phoneNumber,
+      referrer_code: referredByCode,
+      referrer_id: referrerId,
+      organization_id: (await getDefaultOrganization(supabase)) || null,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Error creating customer:", error);
+    throw error;
+  }
+
+  // If referred, notify the referrer (optional - can be implemented later)
+  if (referrerData) {
+    console.log(`New customer referred by ${referrerData.full_name}`);
+  }
+
+  return newCustomer;
 }
 
-async function handleMenuInquiry(
-  organizationId: string,
-  supabaseUrl: string,
-  supabaseServiceKey: string
-): Promise<string> {
-  try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+async function getDefaultOrganization(supabase: any): Promise<string | null> {
+  const { data } = await supabase
+    .from("organizations")
+    .select("id")
+    .eq("is_active", true)
+    .limit(1)
+    .single();
 
-    // only expose bundles to public/whatsapp
+  return data?.id || null;
+}
+
+async function classifyIntent(message: string): Promise<AIIntent> {
+  const lowerMessage = message.toLowerCase().trim();
+
+  // Greeting patterns
+  if (/^(halo|hai|hi|hey|assalamualaikum|selamat|salam|apa kabar)/.test(lowerMessage)) {
+    return { type: "greeting", confidence: 0.9, parameters: {} };
+  }
+
+  // Name response - contains name-like words (common Indonesian names)
+  if (/^(nama saya|namaku|saya|nama|width|jan|dian|tri|putri|adi| Budi|ani|siti|made|ketut|agus|heru|eka|eka|依莎)/.test(lowerMessage) || 
+      /^[A-Z][a-z]+(\s[A-Z][a-z]+)?$/.test(message.trim())) {
+    return { type: "get_name", confidence: 0.85, parameters: { name: message.trim() } };
+  }
+
+  // Menu inquiry
+  if (/(menu|produk|paket|makanan|minuman|apa(.*?)ada|tersedia|catalog)/.test(lowerMessage)) {
+    return { type: "menu_inquiry", confidence: 0.85, parameters: {} };
+  }
+
+  // Order status
+  if (/(pesanan|order|status|dimana|progress|lagi|cek)/.test(lowerMessage)) {
+    return { type: "order_status", confidence: 0.8, parameters: {} };
+  }
+
+  // Create order / buy
+  if (/(pesan|beli|order|mau|nanti|belum|pake|gunain)/.test(lowerMessage)) {
+    return { type: "create_order", confidence: 0.75, parameters: {} };
+  }
+
+  // Referral
+  if (/(referral|undang|teman|share|bagikan|kode|ajak)/.test(lowerMessage)) {
+    return { type: "referral_info", confidence: 0.85, parameters: {} };
+  }
+
+  // Share referral link
+  if (/(share|bagikan|link|aku|mau)/.test(lowerMessage) && /referral/i.test(lowerMessage)) {
+    return { type: "share_referral", confidence: 0.8, parameters: {} };
+  }
+
+  // Complaint
+  if (/(komplain|keluhan|masalah|gagal|tidak|salah|kecewa|rusak)/.test(lowerMessage)) {
+    return { type: "complaint", confidence: 0.7, parameters: {} };
+  }
+
+  // Support
+  if (/(bantuan|tolong|help|bisa|can)/.test(lowerMessage)) {
+    return { type: "support", confidence: 0.6, parameters: {} };
+  }
+
+  return { type: "unknown", confidence: 0.5, parameters: {} };
+}
+
+function getRandomMessage(messages: string[]): string {
+  return messages[Math.floor(Math.random() * messages.length)];
+}
+
+function formatMessage(template: string, data: Record<string, string>): string {
+  let result = template;
+  for (const [key, value] of Object.entries(data)) {
+    result = result.replace(new RegExp(`{${key}}`, 'g'), value);
+  }
+  return result;
+}
+
+async function generateResponse(
+  intent: AIIntent,
+  customer: any,
+  supabaseUrl: string,
+  supabaseServiceKey: string,
+  originalMessage: string
+): Promise<string> {
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  // Handle name capture
+  if (intent.type === "get_name") {
+    // Extract name from message
+    let name = originalMessage
+      .replace(/^(nama saya|namaku|saya|nama|width)/i, '')
+      .trim();
+    
+    if (name.length < 2) {
+      name = originalMessage.trim();
+    }
+
+    // Update customer name
+    await supabase
+      .from("whatsapp_customers")
+      .update({ full_name: name })
+      .eq("id", customer.id);
+
+    return formatMessage(getRandomMessage(MARKETING_MESSAGES.greeting), { name });
+  }
+
+  // Handle greeting
+  if (intent.type === "greeting") {
+    if (customer.full_name) {
+      return formatMessage(getRandomMessage(MARKETING_MESSAGES.greeting), { 
+        name: customer.full_name 
+      });
+    } else {
+      return getRandomMessage(MARKETING_MESSAGES.greeting_no_name);
+    }
+  }
+
+  // Handle menu inquiry - show bundles only, no prices
+  if (intent.type === "menu_inquiry") {
     const { data: bundles } = await supabase
       .from("bundles")
-      .select("id, name, price")
-      .eq("organization_id", organizationId)
-      .eq("is_active", true);
+      .select("name, description")
+      .eq("is_active", true)
+      .limit(5);
 
     if (!bundles || bundles.length === 0) {
-      return "Menu sedang tidak tersedia. Silakan coba lagi nanti.";
+      return "Maaf ya, sedang tidak ada paket yang tersedia. Coba lagi nanti ya! 🙏";
     }
 
-    let response = "📦 PAKET KAMI:\n\n";
-    bundles.forEach((b, index) => {
-      response += `${index + 1}. ${b.name} - Rp ${b.price}\n`;
-    });
+    let bundleList = bundles.map((b, i) => 
+      `${i + 1}. *${b.name}*\n   ${b.description || 'Paket spesial untuk kamu!'}`
+    ).join("\n\n");
 
-    response +=
-      "\n\nUntuk melihat detail dan memesan, kunjungi:\nhttps://feisty.app/weborder";
-
-    return response;
-  } catch (error) {
-    console.error("Menu inquiry error:", error);
-    return "Maaf, terjadi kesalahan. Silakan coba lagi nanti.";
+    return formatMessage(getRandomMessage(MARKETING_MESSAGES.menu), {
+      message: bundleList,
+    }) + "\n\n" + getRandomMessage(MARKETING_MESSAGES.order_cta);
   }
+
+  // Handle order status
+  if (intent.type === "order_status") {
+    const { data: orders } = await supabase
+      .from("orders")
+      .select("order_number, status, total, created_at")
+      .eq("customer_phone", customer.phone_number)
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    if (!orders || orders.length === 0) {
+      return "Belum ada pesanan dari kamu nih. Mau pesan pertama kamu? Klik di sini: 🌐 feisty.app/weborder";
+    }
+
+    let orderList = orders.map((o) => 
+      `📋 ${o.order_number} - Status: *${o.status}*`
+    ).join("\n");
+
+    return `📦 *Status Pesanan Kamu:*\n\n${orderList}\n\nPesan lagi? feisty.app/weborder 🚀`;
+  }
+
+  // Handle create order
+  if (intent.type === "create_order") {
+    const referralPart = customer.my_referral_code 
+      ? `\n\n🎁 Gunakan kode *${customer.my_referral_code}* untuk dapat benefit!`
+      : "";
+
+    return `🔥 Siap nih! Yuk pesan lewat web agar lebih mudah pilih-pilih menu!\n\n🌐 *feisty.app/weborder*${referralPart}\n\n Kalau ada yang bingung, chat lagi ya! 😊`;
+  }
+
+  // Handle referral info
+  if (intent.type === "referral_info") {
+    const { count } = await supabase
+      .from("whatsapp_customers")
+      .select("*", { count: "exact", head: true })
+      .eq("referrer_id", customer.id);
+
+    const referralCount = count || 0;
+    const referrerName = customer.full_name || "Temanmu";
+
+    return formatMessage(getRandomMessage(MARKETING_MESSAGES.referral), {
+      names: referrerName,
+      count: referralCount.toString(),
+    });
+  }
+
+  // Handle share referral
+  if (intent.type === "share_referral") {
+    if (!customer.my_referral_code) {
+      return "Maaf, kode referral kamu belum siap. Coba chat lagi ya!";
+    }
+
+    const shareMessage = `Halo! Aku sudah pesan di Feisty dan.enak banget! 🎉 Coba kamu juga pakai kode referralku: *${customer.my_referral_code}* biar dapat manfaat bareng!`;
+
+    return formatMessage(getRandomMessage(MARKETING_MESSAGES.share_link), {
+      message: encodeURIComponent(shareMessage),
+    });
+  }
+
+  // Handle complaint
+  if (intent.type === "complaint") {
+    return "Kami maaf sekali kalau ada yang kurang berkenan. 🙏 Ceritakan masalahnya, kami akan segera bantu! Setiap masukan sangat berarti untuk kami.";
+  }
+
+  // Default / unknown - ask for name or show menu
+  if (intent.type === "unknown") {
+    if (!customer.full_name) {
+      return "Senang bisa chat dengan kamu! Boleh tau nama kamu dulu? 😊";
+    }
+
+    return `Halo ${customer.full_name}! 👋 Ada yang bisa kami bantu?\n\n🍔 Ketik 'menu' untuk lihat paket\n📦 Ketik 'referral' untuk info undangan teman\n🌐 Ketik 'order' untuk pesan langsung`;
+  }
+
+  // Support
+  if (intent.type === "support") {
+    return "Tentu! Kami siap membantu. Kamu bisa:\n📝 Chat ini untuk pertanyaan umum\n🌐 feisty.app/weborder untuk pesan online\n📞 Hubungi outlet terdekat\n\nApa yang kamu butuhkan? 😊";
+  }
+
+  return "Terima kasih sudah menghubungi Feisty! Ada yang bisa kami bantu? 😊";
 }
