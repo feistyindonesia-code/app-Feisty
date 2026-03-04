@@ -390,6 +390,9 @@ serve(async (req: Request) => {
       
       // Send via Whacenter
       const whacenterDeviceId = Deno.env.get("WHACENTER_DEVICE_ID") || "";
+      console.log("WHACENTER_DEVICE_ID:", whacenterDeviceId ? "SET" : "NOT SET");
+      console.log("Sending to phone:", payload.from);
+      
       if (whacenterDeviceId) {
         const result = await sendWhacenterMessage(whacenterDeviceId, payload.from, responseText);
         console.log("Whacenter result:", result);
