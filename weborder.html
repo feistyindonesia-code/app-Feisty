@@ -272,218 +272,89 @@
     <main>
       <div class="container">
         <div class="menu-section">
-          <div class="category-tabs">
-            <div class="category-tab active" data-category="all">
-              Semua
-            </div>
-            <div class="category-tab" data-category="main">Makanan Utama</div>
-            <div class="category-tab" data-category="drink">Minuman</div>
-            <div class="category-tab" data-category="dessert">Dessert</div>
-          </div>
-
-          <div class="products-grid" id="products-grid">
-            <!-- Products will be loaded here -->
-          </div>
+          <h2>Pilih Paket (Bundle)</h2>
+          <div id="bundles-container">Memuat paket...</div>
         </div>
 
         <div class="cart-sidebar">
-          <div class="cart-title">
-            🛒 Cart
-            <span id="cart-count" style="color: #667eea">(0)</span>
-          </div>
-
-          <div class="cart-items" id="cart-items">
-            <div class="empty-state">Cart kosong</div>
-          </div>
-
-          <div class="cart-summary">
-            <div class="summary-row">
-              <span>Subtotal</span>
-              <span id="subtotal">Rp 0</span>
-            </div>
-            <div class="summary-row">
-              <span>Tax (10%)</span>
-              <span id="tax">Rp 0</span>
-            </div>
-            <div class="summary-row total">
-              <span>Total</span>
-              <span id="total">Rp 0</span>
-            </div>
-          </div>
-
-          <button class="checkout-btn" onclick="checkout()">
-            Checkout
-          </button>
+          <h2>Form Pemesanan</h2>
+          <form id="order-form">
+            <input type="hidden" id="bundle-id" />
+            <label>Nama:<br><input type="text" id="customer-name" required></label><br>
+            <label>Telepon:<br><input type="text" id="customer-phone" required></label><br>
+            <label>Alamat:<br><input type="text" id="delivery-address" required></label><br>
+            <label>Latitude:<br><input type="number" id="delivery-latitude" step="0.000001" required></label><br>
+            <label>Longitude:<br><input type="number" id="delivery-longitude" step="0.000001" required></label><br>
+            <button type="submit" class="add-to-cart-btn">Kirim Pesanan</button>
+          </form>
         </div>
       </div>
     </main>
 
     <script>
-      // Mock data
-      const products = [
-        {
-          id: "1",
-          name: "Burger Spesial",
-          price: 45000,
-          category: "main",
-          emoji: "🍔",
-          description: "Daging premium dengan saus spesial",
-        },
-        {
-          id: "2",
-          name: "Nasi Goreng",
-          price: 35000,
-          category: "main",
-          emoji: "🍚",
-          description: "Nasi goreng dengan telur dan sayuran",
-        },
-        {
-          id: "3",
-          name: "Iced Coffee",
-          price: 25000,
-          category: "drink",
-          emoji: "☕",
-          description: "Kopi premium es dingin",
-        },
-        {
-          id: "4",
-          name: "Smoothie Mangga",
-          price: 28000,
-          category: "drink",
-          emoji: "🥤",
-          description: "Mangga segar tanpa gula tambahan",
-        },
-        {
-          id: "5",
-          name: "Tiramisu",
-          price: 32000,
-          category: "dessert",
-          emoji: "🍰",
-          description: "Tiramisu klasik Italia",
-        },
-      ];
+      // Basic bundle-based ordering
+      const SUPABASE_URL = "https://your-project.supabase.co";
+      const SUPABASE_KEY = "YOUR_PUBLIC_ANON_KEY"; // replace with real anon key
 
-      let cart = {};
-      let currentCategory = "all";
-
-      function renderProducts() {
-        const grid = document.getElementById("products-grid");
-        grid.innerHTML = "";
-
-        const filtered =
-          currentCategory === "all"
-            ? products
-            : products.filter((p) => p.category === currentCategory);
-
-        filtered.forEach((product) => {
-          const card = document.createElement("div");
-          card.className = "product-card";
-          card.innerHTML = `
-            <div class="product-image">${product.emoji}</div>
-            <div class="product-info">
-              <div class="product-name">${product.name}</div>
-              <div class="product-price">Rp ${product.price.toLocaleString()}</div>
-              <div class="product-description">${product.description}</div>
-              <button class="add-to-cart-btn" onclick="addToCart('${product.id}')">
-                Tambah
-              </button>
-            </div>
-          `;
-          grid.appendChild(card);
-        });
-      }
-
-      function addToCart(productId) {
-        const product = products.find((p) => p.id === productId);
-        if (!product) return;
-
-        if (cart[productId]) {
-          cart[productId].quantity++;
-        } else {
-          cart[productId] = {
-            ...product,
-            quantity: 1,
-          };
-        }
-
-        updateCart();
-        showToast("Ditambahkan ke cart!");
-      }
-
-      function updateCart() {
-        const itemsContainer = document.getElementById("cart-items");
-        const items = Object.values(cart);
-
-        if (items.length === 0) {
-          itemsContainer.innerHTML = '<div class="empty-state">Cart kosong</div>';
-          document.getElementById("cart-count").textContent = "(0)";
-          document.getElementById("subtotal").textContent = "Rp 0";
-          document.getElementById("tax").textContent = "Rp 0";
-          document.getElementById("total").textContent = "Rp 0";
+      async function loadBundles() {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/bundles?select=id,name,price&is_active=eq.true`,
+          {
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+            },
+          }
+        );
+        const bundles = await res.json();
+        const container = document.getElementById("bundles-container");
+        if (!bundles || bundles.length === 0) {
+          container.textContent = "Tidak ada paket saat ini.";
           return;
         }
-
-        itemsContainer.innerHTML = items
+        container.innerHTML = bundles
           .map(
-            (item) => `
-          <div class="cart-item">
-            <div class="cart-item-details">
-              <div class="cart-item-name">${item.name}</div>
-              <div class="cart-item-qty">x${item.quantity}</div>
-            </div>
-            <div class="cart-item-price">
-              Rp ${(item.price * item.quantity).toLocaleString()}
-            </div>
-          </div>
-        `
+            (b) =>
+              `<div class="bundle-item"><strong>${b.name}</strong> - Rp ${parseFloat(
+                b.price
+              ).toLocaleString()} <button onclick="selectBundle('${b.id}')">Pilih</button></div>`
           )
           .join("");
-
-        const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        const tax = Math.round(subtotal * 0.1);
-        const total = subtotal + tax;
-
-        document.getElementById("cart-count").textContent = `(${items.length})`;
-        document.getElementById("subtotal").textContent = `Rp ${subtotal.toLocaleString()}`;
-        document.getElementById("tax").textContent = `Rp ${tax.toLocaleString()}`;
-        document.getElementById("total").textContent = `Rp ${total.toLocaleString()}`;
       }
 
-      function checkout() {
-        if (Object.keys(cart).length === 0) {
-          showToast("Cart masih kosong!");
-          return;
-        }
-
-        // In production, call create-order API
-        showToast("Pesanan berhasil dibuat! Silakan hubungi store kami.");
-        cart = {};
-        updateCart();
+      function selectBundle(id) {
+        document.getElementById("bundle-id").value = id;
+        document.getElementById("order-form").style.display = "block";
       }
 
-      function showToast(message) {
-        const toast = document.getElementById("toast");
-        toast.textContent = message;
-        toast.style.display = "block";
-        setTimeout(() => {
-          toast.style.display = "none";
-        }, 3000);
-      }
-
-      // Event listeners for category tabs
-      document.querySelectorAll(".category-tab").forEach((tab) => {
-        tab.addEventListener("click", () => {
-          document
-            .querySelectorAll(".category-tab")
-            .forEach((t) => t.classList.remove("active"));
-          tab.classList.add("active");
-          currentCategory = tab.dataset.category;
-          renderProducts();
+      document.getElementById("order-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = {
+          bundle_id: document.getElementById("bundle-id").value,
+          customer_name: document.getElementById("customer-name").value,
+          customer_phone: document.getElementById("customer-phone").value,
+          delivery_address: document.getElementById("delivery-address").value,
+          delivery_latitude: parseFloat(
+            document.getElementById("delivery-latitude").value
+          ),
+          delivery_longitude: parseFloat(
+            document.getElementById("delivery-longitude").value
+          ),
+          payment_method: "cash",
+        };
+        const result = await fetch("/functions/v1/create-order", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer YOUR_SERVICE_ROLE_KEY", // replace
+          },
+          body: JSON.stringify(data),
         });
+        const resJson = await result.json();
+        alert(JSON.stringify(resJson));
       });
 
-      // Initial render
-      renderProducts();
+      loadBundles();
     </script>
   </body>
 </html>
