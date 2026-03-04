@@ -1,5 +1,6 @@
 // Whacenter API Helper
 // Docs: https://whacenter.com/docs/api
+// API URL: https://api.whacenter.com/api/send
 
 export interface WhacenterMessage {
   phone: string;
@@ -8,27 +9,34 @@ export interface WhacenterMessage {
 
 export interface WhacenterResponse {
   success: boolean;
-  message_id?: string;
+  status?: boolean;
+  code?: number;
+  data?: {
+    id?: string;
+    to?: string;
+    message?: string;
+  };
   error?: string;
 }
 
 /**
  * Send WhatsApp message via Whacenter API
+ * 
+ * @param deviceId - Device ID dari dashboard Whacenter
+ * @param message - Object dengan phone dan message
  */
 export async function sendWhacenterMessage(
-  apiKey: string,
-  deviceKey: string,
+  deviceId: string,
   message: WhacenterMessage
 ): Promise<WhacenterResponse> {
   try {
-    const response = await fetch('https://whacenter-api.com/api/send', {
+    const response = await fetch('https://api.whacenter.com/api/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        device_key: deviceKey,
+        device_id: deviceId,
         phone: message.phone,
         message: message.message,
       }),
@@ -36,15 +44,23 @@ export async function sendWhacenterMessage(
 
     const data = await response.json();
 
+    // Whacenter response format:
+    // { status: true, code: 200, data: { id, to, message } }
+    // { status: false, code: 400, error: "..." }
+    
     if (data.status === true || data.code === 200) {
       return {
         success: true,
-        message_id: data.data?.id || data.message_id,
+        status: data.status,
+        code: data.code,
+        data: data.data,
       };
     } else {
       return {
         success: false,
-        error: data.message || 'Failed to send message',
+        status: data.status,
+        code: data.code,
+        error: data.error || 'Failed to send message',
       };
     }
   } catch (error) {
@@ -57,30 +73,10 @@ export async function sendWhacenterMessage(
 }
 
 /**
- * Send bulk WhatsApp messages via Whacenter API
+ * Format phone number untuk Whacenter
+ * Contoh: 6287787655880
  */
-export async function sendWhacenterBulkMessage(
-  apiKey: string,
-  deviceKey: string,
-  messages: WhacenterMessage[]
-): Promise<WhacenterResponse[]> {
-  const results: WhacenterResponse[] = [];
-  
-  for (const message of messages) {
-    const result = await sendWhacenterMessage(apiKey, deviceKey, message);
-    results.push(result);
-    
-    // Add delay to avoid rate limiting
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  
-  return results;
-}
-
-/**
- * Format phone number for Indonesian format
- */
-export function formatIndonesianPhone(phone: string): string {
+export function formatPhoneNumber(phone: string): string {
   // Remove all non-digit characters
   let cleaned = phone.replace(/\D/g, '');
   
@@ -94,19 +90,20 @@ export function formatIndonesianPhone(phone: string): string {
     cleaned = '62' + cleaned;
   }
   
-  return cleaned + '@c.us';
+  return cleaned;
 }
 
 /**
- * Simple WhatsApp message format (for basic text)
+ * Simple wrapper untuk kirim message
  */
-export function formatSimpleMessage(
+export async function sendWhatsAppMessage(
+  deviceId: string,
   phone: string,
-  message: string
-): { phone: string; message: string } {
-  // Whacenter uses simple format
-  return {
-    phone: phone,
-    message: message,
-  };
+  messageText: string
+): Promise<WhacenterResponse> {
+  const formattedPhone = formatPhoneNumber(phone);
+  return sendWhacenterMessage(deviceId, {
+    phone: formattedPhone,
+    message: messageText,
+  });
 }
