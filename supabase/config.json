@@ -65,6 +65,11 @@
       "id": "notify-outlet",
       "port": 54321,
       "verify_jwt": false
+    },
+    {
+      "id": "notify-customer",
+      "port": 54321,
+      "verify_jwt": false
     }
   ]
 }
