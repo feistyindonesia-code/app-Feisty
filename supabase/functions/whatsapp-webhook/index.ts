@@ -63,16 +63,25 @@ serve(async (req: Request) => {
 
     // Get default organization
     let organizationId: string | null = null;
-    const { data: org } = await supabase
-      .from("organizations")
-      .select("id")
-      .eq("is_active", true)
-      .limit(1)
-      .single();
-    
-    if (org) {
-      organizationId = org.id;
+    try {
+      const { data: org, error: orgError } = await supabase
+        .from("organizations")
+        .select("id")
+        .eq("is_active", true)
+        .limit(1)
+        .single();
+      
+      if (org && !orgError) {
+        organizationId = org.id;
+        console.log("Found organization:", organizationId);
+      } else {
+        console.log("No organization found or error:", orgError);
+      }
+    } catch (e) {
+      console.error("Error getting organization:", e);
     }
+
+    console.log("Using organization_id:", organizationId);
 
     // Extract referral code from message if present
     let referredByCode: string | undefined;
