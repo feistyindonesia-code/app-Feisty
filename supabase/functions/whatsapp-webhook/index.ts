@@ -98,17 +98,18 @@ serve(async (req: Request) => {
 
     // Store incoming message in database (organization_id optional)
     const insertData: any = {
+      device_id: Deno.env.get("WHATSAPP_DEVICE_ID") || "whacenter-default", // Tambahkan default device_id
       phone_number: payload.from,
       message_type: "text",
       message_text: messageText,
       direction: "inbound",
     };
-    
+
     // Only add organization_id if we have it
     if (organizationId) {
       insertData.organization_id = organizationId;
     }
-    
+
     const { data: stored, error: storeError } = await supabase
       .from("whatsapp_messages")
       .insert(insertData)
