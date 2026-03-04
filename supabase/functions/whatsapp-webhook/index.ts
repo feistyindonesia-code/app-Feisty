@@ -61,6 +61,19 @@ serve(async (req: Request) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Get default organization
+    let organizationId: string | null = null;
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("is_active", true)
+      .limit(1)
+      .single();
+    
+    if (org) {
+      organizationId = org.id;
+    }
+
     // Extract referral code from message if present
     let referredByCode: string | undefined;
     const messageText = payload.message;
@@ -78,6 +91,7 @@ serve(async (req: Request) => {
     const { data: stored, error: storeError } = await supabase
       .from("whatsapp_messages")
       .insert({
+        organization_id: organizationId,
         phone_number: payload.from,
         message_type: "text",
         message_text: messageText,
