@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "deploy": "supabase functions deploy --project-ref $SUPABASE_PROJECT_REF",
+    "deploy": "supabase functions deploy --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt",
     "serve": "supabase functions serve",
     "test": "deno test --allow-all"
   },
