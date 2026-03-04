@@ -97,13 +97,33 @@ serve(async (req: Request) => {
     }
 
     // Store incoming message in database (organization_id optional)
+    // Get device_id - try to find from whatsapp_devices or use default
+    let deviceId: string | null = null;
+    try {
+      const { data: device } = await supabase
+        .from("whatsapp_devices")
+        .select("id")
+        .limit(1)
+        .single();
+      
+      if (device) {
+        deviceId = device.id;
+      }
+    } catch (e) {
+      console.log("No whatsapp device found, will skip device_id");
+    }
+
     const insertData: any = {
-      device_id: Deno.env.get("WHATSAPP_DEVICE_ID") || "whacenter-default", // Tambahkan default device_id
       phone_number: payload.from,
       message_type: "text",
       message_text: messageText,
       direction: "inbound",
     };
+
+    // Add device_id if found
+    if (deviceId) {
+      insertData.device_id = deviceId;
+    }
 
     // Only add organization_id if we have it
     if (organizationId) {
