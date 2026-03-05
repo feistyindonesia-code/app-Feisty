@@ -1,0 +1,18 @@
+# Ignore
+.env.local
+.env*.local
+node_modules/
+dist/
+build/
+.DS_Store
+.vscode/
+*.swp
+*.swo
+*~
+.supabase/
+.database.json
+.env
+.secret
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
