@@ -124,6 +124,7 @@ CREATE INDEX IF NOT EXISTS idx_outlet_hours_outlet ON outlet_hours(outlet_id);
 
 -- ============================================================================
 -- RLS POLICIES
+-- Note: Using explicit role checks to avoid enum value issues
 -- ============================================================================
 
 ALTER TABLE bot_settings ENABLE ROW LEVEL SECURITY;
@@ -144,7 +145,11 @@ DROP POLICY IF EXISTS "outlet_users_access" ON outlet_users;
 CREATE POLICY "outlet_users_access" ON outlet_users
   FOR ALL USING (
     user_id = auth.uid()
-    OR EXISTS (SELECT 1 FROM user_accounts WHERE id = auth.uid() AND role IN ('super_admin', 'admin', 'outlet_admin'))
+    OR EXISTS (
+      SELECT 1 FROM user_accounts 
+      WHERE id = auth.uid() 
+      AND role::text IN ('super_admin', 'admin', 'outlet_admin')
+    )
   );
 
 -- Delivery Zones Policy
@@ -159,7 +164,11 @@ DROP POLICY IF EXISTS "outlet_hours_access" ON outlet_hours;
 CREATE POLICY "outlet_hours_access" ON outlet_hours
   FOR ALL USING (
     outlet_id IN (SELECT outlet_id FROM outlet_users WHERE user_id = auth.uid())
-    OR EXISTS (SELECT 1 FROM user_accounts WHERE id = auth.uid() AND role IN ('super_admin', 'admin'))
+    OR EXISTS (
+      SELECT 1 FROM user_accounts 
+      WHERE id = auth.uid() 
+      AND role::text IN ('super_admin', 'admin')
+    )
   );
 
 -- Updated Products Policy
