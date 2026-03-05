@@ -271,7 +271,7 @@ ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_categories ENABLE ROW LEVEL SECURITY;
 
 -- Organizations: Only admin can view
-CREATE POLICY "organizations_admin_view" ON organizations
+CREATE POLICY IF NOT EXISTS "organizations_admin_view" ON organizations
   FOR SELECT USING (
     auth.uid()::text IN (
       SELECT user_accounts.id::text FROM user_accounts 
@@ -280,7 +280,7 @@ CREATE POLICY "organizations_admin_view" ON organizations
   );
 
 -- Outlets: Users can view their own organization's outlets
-CREATE POLICY "outlets_view" ON outlets
+CREATE POLICY IF NOT EXISTS "outlets_view" ON outlets
   FOR SELECT USING (
     organization_id IN (
       SELECT organization_id FROM user_accounts WHERE id = auth.uid()
@@ -288,7 +288,7 @@ CREATE POLICY "outlets_view" ON outlets
   );
 
 -- User Accounts: Users can view their own organization
-CREATE POLICY "user_accounts_view" ON user_accounts
+CREATE POLICY IF NOT EXISTS "user_accounts_view" ON user_accounts
   FOR SELECT USING (
     organization_id IN (
       SELECT organization_id FROM user_accounts WHERE id = auth.uid()
@@ -297,7 +297,7 @@ CREATE POLICY "user_accounts_view" ON user_accounts
   );
 
 -- Orders: Users can view their own organization's orders
-CREATE POLICY "orders_view" ON orders
+CREATE POLICY IF NOT EXISTS "orders_view" ON orders
   FOR SELECT USING (
     organization_id IN (
       SELECT organization_id FROM user_accounts WHERE id = auth.uid()
@@ -306,14 +306,14 @@ CREATE POLICY "orders_view" ON orders
   );
 
 -- Customers can only see their own orders
-CREATE POLICY "orders_customer_view" ON orders
+CREATE POLICY IF NOT EXISTS "orders_customer_view" ON orders
   FOR SELECT USING (
     (SELECT role FROM user_accounts WHERE id = auth.uid()) = 'customer'
     AND customer_id = auth.uid()
   );
 
 -- Order Items: Follow order visibility
-CREATE POLICY "order_items_view" ON order_items
+CREATE POLICY IF NOT EXISTS "order_items_view" ON order_items
   FOR SELECT USING (
     order_id IN (
       SELECT id FROM orders WHERE 
@@ -325,7 +325,7 @@ CREATE POLICY "order_items_view" ON order_items
   );
 
 -- Products: Operators can see their outlet's products
-CREATE POLICY "products_view" ON products
+CREATE POLICY IF NOT EXISTS "products_view" ON products
   FOR SELECT USING (
     organization_id IN (
       SELECT organization_id FROM user_accounts WHERE id = auth.uid()
@@ -333,7 +333,7 @@ CREATE POLICY "products_view" ON products
   );
 
 -- Payments: Users can view their organization's payments
-CREATE POLICY "payments_view" ON payments
+CREATE POLICY IF NOT EXISTS "payments_view" ON payments
   FOR SELECT USING (
     organization_id IN (
       SELECT organization_id FROM user_accounts WHERE id = auth.uid()
