@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Feisty</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../frontend/config.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -242,11 +243,8 @@
 
   <script>
     // ============================================
-    // CONFIGURATION
+    // CONFIGURATION (loaded from config.js)
     // ============================================
-    const SUPABASE_URL = "https://your-project.supabase.co";
-    const SUPABASE_ANON_KEY = "your-anon-key";
-    const AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/auth`;
 
     // ============================================
     // STATE
