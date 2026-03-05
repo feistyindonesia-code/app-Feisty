@@ -3,18 +3,10 @@
 -- Purpose:完善 user roles, product global flag, outlet settings, bot config
 -- ============================================================================
 
--- 1. UPDATE USER ROLE ENUM (add new roles)
-DO $$
+-- 1. UPDATE USER ROLE ENUM (add new roles) - MUST happen before policies
+DO $
 BEGIN
-  -- Drop existing policies that depend on user_role
-  DROP POLICY IF EXISTS "organizations_admin_view" ON organizations;
-  DROP POLICY IF EXISTS "products_view" ON products;
-  DROP POLICY IF EXISTS "orders_view" ON orders;
-  DROP POLICY IF EXISTS "orders_customer_view" ON orders;
-  DROP POLICY IF EXISTS "order_items_view" ON order_items;
-  DROP POLICY IF EXISTS "payments_view" ON payments;
-  
-  -- Alter the type to add new roles
+  -- First add the enum values
   ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'super_admin';
   ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'outlet_admin';
   ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'kasir';
@@ -23,7 +15,7 @@ EXCEPTION
     -- Type already modified, continue
     NULL;
 END
-$$;
+$;
 
 -- 2. ADD IS_GLOBAL TO PRODUCTS (products available in all outlets)
 ALTER TABLE products ADD COLUMN IF NOT EXISTS is_global BOOLEAN DEFAULT true;
@@ -127,6 +119,7 @@ CREATE INDEX IF NOT EXISTS idx_outlet_hours_outlet ON outlet_hours(outlet_id);
 
 -- ============================================================================
 -- RLS POLICIES (Updated for new roles)
+-- NOTE: These must come AFTER the enum is updated
 -- ============================================================================
 
 ALTER TABLE bot_settings ENABLE ROW LEVEL SECURITY;
@@ -236,7 +229,7 @@ RETURNS TABLE (
   distance NUMERIC,
   delivery_fee DECIMAL,
   is_open BOOLEAN
-) AS $$
+) AS $
 BEGIN
   RETURN QUERY
   SELECT 
@@ -258,11 +251,11 @@ BEGIN
   ORDER BY distance ASC
   LIMIT 1;
 END;
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;
 
 -- Function to get user's role in outlet
 CREATE OR REPLACE FUNCTION get_user_outlet_role(p_user_id UUID, p_outlet_id UUID)
-RETURNS VARCHAR AS $$
+RETURNS VARCHAR AS $
 DECLARE
   v_role VARCHAR;
 BEGIN
@@ -279,11 +272,11 @@ BEGIN
   
   RETURN v_role;
 END;
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;
 
 -- Function to check if user can access outlet
 CREATE OR REPLACE FUNCTION can_access_outlet(p_user_id UUID, p_outlet_id UUID)
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN AS $
 DECLARE
   v_org_id UUID;
   v_role VARCHAR;
@@ -307,7 +300,7 @@ BEGIN
   
   RETURN false;
 END;
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;
 
 -- ============================================================================
 -- SEED DATA (Optional - for testing)
