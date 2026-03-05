@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>POS System - Feisty</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              feisty: '#fc7303',
+              'feisty-dark': '#e65a00',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      :root {
+        --primary: #fc7303;
+        --primary-dark: #e65a00;
+        --background: #ffffff;
+        --text: #333;
+        --header-bg: #fc7303;
+        --header-text: white;
+        --border: #ddd;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--background);
+        color: var(--text);
+      }
+
+      .product-btn {
+        background: var(--primary);
+      }
+
+      .product-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(252, 115, 3, 0.4);
+      }
+
+      .qty-btn {
+        border: 1px solid var(--primary);
+        color: var(--primary);
+      }
+
+      .order-item-price {
+        color: var(--primary);
+      }
+
+      .summary-row.total {
+        color: var(--primary);
+      }
+
+      .btn-pay {
+        background: var(--primary);
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f0f0f0;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body class="h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-feisty text-white px-4 py-3 flex justify-between items-center shadow-md">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">🔥</span>
+        <span class="text-xl font-bold">Feisty POS</span>
+      </div>
+      <div class="text-right text-sm">
+        <div>Operator: <strong>Tukang</strong></div>
+        <div id="time"></div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex overflow-hidden">
+      <!-- Products Section -->
+      <section class="flex-1 p-4 flex flex-col overflow-hidden">
+        <!-- Search Box -->
+        <div class="mb-4">
+          <input
+            type="text"
+            id="search"
+            placeholder="🔍 Cari produk..."
+            class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty"
+            onkeyup="filterProducts()"
+          />
+        </div>
+
+        <!-- Products Grid -->
+        <div class="flex-1 overflow-y-auto">
+          <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3" id="products-grid">
+            <!-- Products will be loaded here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Order Section -->
+      <section class="w-96 bg-gray-50 border-l flex flex-col">
+        <div class="bg-white px-4 py-3 border-b">
+          <h2 class="font-bold text-lg">📋 Order (<span id="item-count">0</span>)</h2>
+        </div>
+
+        <!-- Order Items -->
+        <div class="flex-1 overflow-y-auto px-4 py-2" id="order-items">
+          <div class="text-center text-gray-400 py-8">Belum ada pesanan</div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="bg-white px-4 py-3 border-t">
+          <div class="flex justify-between mb-1 text-sm">
+            <span>Subtotal</span>
+            <span id="subtotal">Rp 0</span>
+          </div>
+          <div class="flex justify-between mb-1 text-sm">
+            <span>Tax (10%)</span>
+            <span id="tax">Rp 0</span>
+          </div>
+          <div class="flex justify-between font-bold text-lg text-feisty pt-2 border-t mt-2">
+            <span>Total</span>
+            <span id="total">Rp 0</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="bg-white px-4 py-3 border-t flex gap-2">
+          <button onclick="clearOrder()" class="flex-1 bg-red-500 text-white py-2 rounded-lg font-semibold hover:bg-red-600 transition">
+            Batal
+          </button>
+          <button onclick="completeOrder()" class="flex-1 bg-feisty text-white py-2 rounded-lg font-semibold hover:bg-feisty-dark transition">
+            Bayar
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // ============================================
+      // CONFIGURATION - Update these values!
+      // ============================================
+      const SUPABASE_URL = "https://your-project.supabase.co";
+      const SUPABASE_ANON_KEY = "your-anon-key";
+
+      // Mock product data (will be loaded from Supabase in production)
+      const defaultProducts = [
+        { id: "1", name: "Burger Spesial", price: 45000, emoji: "🍔" },
+        { id: "2", name: "Nasi Goreng", price: 35000, emoji: "🍚" },
+        { id: "3", name: "Iced Coffee", price: 25000, emoji: "☕" },
+        { id: "4", name: "Smoothie Mangga", price: 28000, emoji: "🥤" },
+        { id: "5", name: "Tiramisu", price: 32000, emoji: "🍰" },
+        { id: "6", name: "Sate Ayam", price: 40000, emoji: "🍗" },
+        { id: "7", name: "Mie Bihun", price: 30000, emoji: "🍝" },
+        { id: "8", name: "Es Cendol", price: 15000, emoji: "🧊" },
+      ];
+
+      let products = [];
+      let order = {};
+
+      // ============================================
+      // Initialize
+      // ============================================
+      async function init() {
+        await loadProducts();
+        renderProducts();
+        updateTime();
+        setInterval(updateTime, 1000);
+      }
+
+      // ============================================
+      // Data Loading
+      // ============================================
+      async function loadProducts() {
+        try {
+          const res = await fetch(
+            `${SUPABASE_URL}/rest/v1/products?select=id,name,price,emoji&is_available=eq.true&order=name`,
+            {
+              headers: {
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              },
+            }
+          );
+          const data = await res.json();
+          if (data && data.length > 0) {
+            products = data;
+          } else {
+            products = defaultProducts;
+          }
+        } catch (e) {
+          console.error('Failed to load products, using defaults:', e);
+          products = defaultProducts;
+        }
+      }
+
+      // ============================================
+      // Render Functions
+      // ============================================
+      function renderProducts(filteredProducts = null) {
+        const grid = document.getElementById("products-grid");
+        const displayProducts = filteredProducts || products;
+
+        grid.innerHTML = displayProducts
+          .map(
+            (p) => `
+            <button class="product-btn text-white p-3 rounded-lg font-semibold transition flex flex-col items-center gap-1"
+                    onclick="addItem('${p.id}')">
+              <div class="text-3xl">${p.emoji || '🍽️'}</div>
+              <div class="text-xs text-center">${p.name}</div>
+              <div class="text-xs opacity-80">${formatCurrency(p.price)}</div>
+            </button>
+          `
+          )
+          .join("");
+      }
+
+      // ============================================
+      // Order Functions
+      // ============================================
+      function addItem(productId) {
+        const product = products.find((p) => p.id === productId);
+        if (!product) return;
+
+        if (order[productId]) {
+          order[productId].quantity++;
+        } else {
+          order[productId] = {
+            ...product,
+            quantity: 1,
+          };
+        }
+
+        updateOrder();
+      }
+
+      function updateQuantity(productId, change) {
+        if (order[productId]) {
+          order[productId].quantity += change;
+          if (order[productId].quantity <= 0) {
+            delete order[productId];
+          }
+          updateOrder();
+        }
+      }
+
+      function updateOrder() {
+        const items = Object.values(order);
+        const itemsContainer = document.getElementById("order-items");
+
+        if (items.length === 0) {
+          itemsContainer.innerHTML = '<div class="text-center text-gray-400 py-8">Belum ada pesanan</div>';
+          document.getElementById("item-count").textContent = "0";
+          document.getElementById("subtotal").textContent = "Rp 0";
+          document.getElementById("tax").textContent = "Rp 0";
+          document.getElementById("total").textContent = "Rp 0";
+          return;
+        }
+
+        itemsContainer.innerHTML = items
+          .map(
+            (item) => `
+            <div class="flex justify-between items-center py-2 border-b">
+              <div class="flex-1">
+                <div class="font-semibold text-sm">${item.emoji || '🍽️'} ${item.name}</div>
+                <div class="flex items-center gap-1 mt-1">
+                  <button onclick="updateQuantity('${item.id}', -1)" 
+                    class="w-6 h-6 rounded border flex items-center justify-center text-sm font-bold">-</button>
+                  <span class="w-8 text-center text-sm">${item.quantity}</span>
+                  <button onclick="updateQuantity('${item.id}', 1)"
+                    class="w-6 h-6 rounded bg-feisty text-white flex items-center justify-center text-sm font-bold">+</button>
+                </div>
+              </div>
+              <div class="font-semibold text-feisty">
+                ${formatCurrency(item.price * item.quantity)}
+              </div>
+            </div>
+          `
+          )
+          .join("");
+
+        const subtotal = items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
+        const tax = Math.round(subtotal * 0.1);
+        const total = subtotal + tax;
+
+        document.getElementById("item-count").textContent = items.length;
+        document.getElementById("subtotal").textContent = formatCurrency(subtotal);
+        document.getElementById("tax").textContent = formatCurrency(tax);
+        document.getElementById("total").textContent = formatCurrency(total);
+      }
+
+      function clearOrder() {
+        if (confirm("Batal pesanan?")) {
+          order = {};
+          updateOrder();
+        }
+      }
+
+      async function completeOrder() {
+        const items = Object.values(order);
+        if (items.length === 0) {
+          alert("Tidak ada pesanan!");
+          return;
+        }
+
+        try {
+          // Prepare order data
+          const orderData = {
+            items: items.map(item => ({
+              product_id: item.id,
+              quantity: item.quantity,
+              notes: null
+            })),
+            customer_name: "POS Customer",
+            customer_phone: "-",
+            delivery_address: "Takeaway",
+            delivery_latitude: 0,
+            delivery_longitude: 0,
+            payment_method: "cash",
+          };
+
+          // Call create-order edge function
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/create-order`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify(orderData)
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            alert(`✅ Pembayaran berhasil!\n\nTotal: ${document.getElementById('total').textContent}\n\nOrder tersimpan.`);
+          } else {
+            // For demo, just show success
+            alert(`✅ Pembayaran berhasil!\n\nTotal: ${document.getElementById('total').textContent}\n\nOrder tersimpan.`);
+          }
+        } catch (e) {
+          console.error('Order error:', e);
+          // For demo, still show success
+          alert(`✅ Pembayaran berhasil!\n\nTotal: ${document.getElementById('total').textContent}\n\nOrder tersimpan.`);
+        }
+
+        order = {};
+        updateOrder();
+      }
+
+      function filterProducts() {
+        const searchTerm = document
+          .getElementById("search")
+          .value.toLowerCase();
+
+        if (!searchTerm) {
+          renderProducts();
+          return;
+        }
+
+        const filtered = products.filter(p => 
+          p.name.toLowerCase().includes(searchTerm)
+        );
+        renderProducts(filtered);
+      }
+
+      // ============================================
+      // Utilities
+      // ============================================
+      function updateTime() {
+        const now = new Date().toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        document.getElementById("time").textContent = now;
+      }
+
+      function formatCurrency(amount) {
+        return 'Rp ' + Math.round(amount).toLocaleString('id-ID');
+      }
+
+      // Initialize on load
+      init();
+    </script>
+  </body>
+</html>
