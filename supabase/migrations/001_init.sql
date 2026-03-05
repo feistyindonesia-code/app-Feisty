@@ -18,42 +18,42 @@ $$;
 
 DO $
 BEGIN
-  CREATE TYPE user_role AS ENUM ('admin', 'outlet_manager', 'operator', 'customer');
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+    CREATE TYPE user_role AS ENUM ('admin', 'outlet_manager', 'operator', 'customer');
+  END IF;
 END
 $;
 
 DO $
 BEGIN
-  CREATE TYPE order_status AS ENUM (
-    'pending',
-    'confirmed',
-    'preparing',
-    'ready',
-    'on_delivery',
-    'delivered',
-    'cancelled',
-    'refunded'
-  );
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'order_status') THEN
+    CREATE TYPE order_status AS ENUM (
+      'pending',
+      'confirmed',
+      'preparing',
+      'ready',
+      'on_delivery',
+      'delivered',
+      'cancelled',
+      'refunded'
+    );
+  END IF;
 END
 $;
 
 DO $
 BEGIN
-  CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_status') THEN
+    CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
+  END IF;
 END
 $;
 
 DO $
 BEGIN
-  CREATE TYPE payment_method AS ENUM ('cash', 'card', 'e_wallet', 'bank_transfer');
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_method') THEN
+    CREATE TYPE payment_method AS ENUM ('cash', 'card', 'e_wallet', 'bank_transfer');
+  END IF;
 END
 $;
 

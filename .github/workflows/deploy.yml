@@ -146,11 +146,8 @@ jobs:
       - name: Push database migrations
         run: |
           echo "Current directory: $(pwd)"
-          echo "Pushing migrations with verbose output..."
-          supabase db push --dry-run || true
-          echo ""
-          echo "Performing actual push..."
-          supabase db push
+          echo "Pushing migrations..."
+          supabase db push --include-all --linked
 
       - name: Pre-deployment file check
         run: |
