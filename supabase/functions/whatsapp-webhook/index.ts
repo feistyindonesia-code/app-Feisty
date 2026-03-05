@@ -137,18 +137,18 @@ function normalizePhoneNumber(phone: string): string {
 
 async function getDeviceId(supabase: any): Promise<string | null> {
   try {
-    const { data: device, error } = await supabase
+    const { data: devices, error } = await supabase
       .from("whatsapp_devices")
       .select("id")
-      .limit(1)
-      .single();
+      .eq("is_active", true)
+      .limit(1);
     
-    if (error) {
-      console.log("No device found, error:", error.message);
+    if (error || !devices || devices.length === 0) {
+      console.log("No device found, error:", error?.message);
       return null;
     }
     
-    return device?.id || null;
+    return devices[0]?.id || null;
   } catch (e) {
     console.log("Error getting device:", e);
     return null;
@@ -157,19 +157,18 @@ async function getDeviceId(supabase: any): Promise<string | null> {
 
 async function getOrganizationId(supabase: any): Promise<string | null> {
   try {
-    const { data: org, error } = await supabase
+    const { data: orgs, error } = await supabase
       .from("organizations")
       .select("id")
       .eq("is_active", true)
-      .limit(1)
-      .single();
+      .limit(1);
     
-    if (error) {
-      console.log("No organization found:", error.message);
+    if (error || !orgs || orgs.length === 0) {
+      console.log("No organization found:", error?.message);
       return null;
     }
     
-    return org?.id || null;
+    return orgs[0]?.id || null;
   } catch (e) {
     console.log("Error getting organization:", e);
     return null;
