@@ -16,15 +16,15 @@ $$;
 -- ENUMS (Idempotent - safe to run multiple times)
 -- ============================================================================
 
-DO $
+DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
     CREATE TYPE user_role AS ENUM ('admin', 'outlet_manager', 'operator', 'customer');
   END IF;
 END
-$;
+$$;
 
-DO $
+DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'order_status') THEN
     CREATE TYPE order_status AS ENUM (
@@ -39,23 +39,23 @@ BEGIN
     );
   END IF;
 END
-$;
+$$;
 
-DO $
+DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_status') THEN
     CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
   END IF;
 END
-$;
+$$;
 
-DO $
+DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_method') THEN
     CREATE TYPE payment_method AS ENUM ('cash', 'card', 'e_wallet', 'bank_transfer');
   END IF;
 END
-$;
+$$;
 
 -- ============================================================================
 -- ORGANIZATIONS & OUTLETS
@@ -392,3 +392,4 @@ CREATE SEQUENCE order_number_seq START 1000;
 
 CREATE TRIGGER auto_generate_order_number BEFORE INSERT ON orders
   FOR EACH ROW EXECUTE FUNCTION generate_order_number();
+
