@@ -193,10 +193,11 @@
                   <th class="px-4 py-2 text-left">Role</th>
                   <th class="px-4 py-2 text-left">Outlet</th>
                   <th class="px-4 py-2 text-left">Status</th>
+                  <th class="px-4 py-2 text-left">Aksi</th>
                 </tr>
               </thead>
               <tbody id="users-table">
-                <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Memuat...</td></tr>
+                <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Memuat...</td></tr>
               </tbody>
             </table>
           </div>
@@ -220,7 +221,7 @@
               <div class="flex items-center justify-between">
                 <div>
                   <div class="font-medium">AI Response</div>
-                  <div class="text-sm text-gray-500">Gunakan AI untuk ответов</div>
+                  <div class="text-sm text-gray-500">Gunakan AI untuk response</div>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" id="ai-enabled" class="sr-only peer">
@@ -231,7 +232,7 @@
                 <label class="block font-medium mb-1">Pesan Salam</label>
                 <textarea id="greeting-message" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-feisty">Halo! Selamat datang di Feisty. Ada yang bisa kami bantu?</textarea>
               </div>
-              <button class="bg-feisty text-white px-6 py-2 rounded-lg hover:bg-feisty-dark">
+              <button onclick="saveBotSettings()" class="bg-feisty text-white px-6 py-2 rounded-lg hover:bg-feisty-dark">
                 Simpan Pengaturan
               </button>
             </div>
@@ -241,16 +242,193 @@
     </div>
   </div>
 
-  <script>
-    // ============================================
-    // CONFIGURATION (loaded from config.js)
-    // ============================================
+  <!-- Modal Templates -->
+  <!-- Product Modal -->
+  <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <h3 class="text-xl font-bold mb-4" id="product-modal-title">Tambah Produk</h3>
+      <form id="product-form" class="space-y-4">
+        <input type="hidden" id="product-id">
+        <div>
+          <label class="block text-sm font-medium mb-1">Nama Produk</label>
+          <input type="text" id="product-name" required class="w-full px-4 py-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Emoji</label>
+          <input type="text" id="product-emoji" class="w-full px-4 py-2 border rounded-lg" placeholder="🍔">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Kategori</label>
+          <select id="product-category" required class="w-full px-4 py-2 border rounded-lg">
+            <option value="">Pilih Kategori</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Harga</label>
+          <input type="number" id="product-price" required class="w-full px-4 py-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Deskripsi</label>
+          <textarea id="product-description" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="product-available" checked class="w-4 h-4">
+          <label class="text-sm">Produk Tersedia</label>
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button type="button" onclick="closeModal('product-modal')" class="px-4 py-2 border rounded-lg">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-feisty text-white rounded-lg">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
+  <!-- Category Modal -->
+  <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <h3 class="text-xl font-bold mb-4" id="category-modal-title">Tambah Kategori</h3>
+      <form id="category-form" class="space-y-4">
+        <input type="hidden" id="category-id">
+        <div>
+          <label class="block text-sm font-medium mb-1">Nama Kategori</label>
+          <input type="text" id="category-name" required class="w-full px-4 py-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Slug</label>
+          <input type="text" id="category-slug" class="w-full px-4 py-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Urutan</label>
+          <input type="number" id="category-sort" value="0" class="w-full px-4 py-2 border rounded-lg">
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button type="button" onclick="closeModal('category-modal')" class="px-4 py-2 border rounded-lg">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-feisty text-white rounded-lg">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Outlet Modal -->
+  <div id="outlet-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
+      <h3 class="text-xl font-bold mb-4" id="outlet-modal-title">Tambah Outlet</h3>
+      <form id="outlet-form" class="space-y-4">
+        <input type="hidden" id="outlet-id">
+        <div>
+          <label class="block text-sm font-medium mb-1">Nama Outlet</label>
+          <input type="text" id="outlet-name" required class="w-full px-4 py-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Alamat</label>
+          <textarea id="outlet-address" rows="2" required class="w-full px-4 py-2 border rounded-lg"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Latitude</label>
+            <input type="text" id="outlet-latitude" class="w-full px-4 py-2 border rounded-lg">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Longitude</label>
+            <input type="text" id="outlet-longitude" class="w-full px-4 py-2 border rounded-lg">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">No. WhatsApp</label>
+          <input type="text" id="outlet-whatsapp" class="w-full px-4 py-2 border rounded-lg">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Jam Buka</label>
+            <input type="time" id="outlet-open" class="w-full px-4 py-2 border rounded-lg">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Jam Tutup</label>
+            <input type="time" id="outlet-close" class="w-full px-4 py-2 border rounded-lg">
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="outlet-active" checked class="w-4 h-4">
+            <label class="text-sm">Aktif</label>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="outlet-open-status" checked class="w-4 h-4">
+            <label class="text-sm">Buka</label>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button type="button" onclick="closeModal('outlet-modal')" class="px-4 py-2 border rounded-lg">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-feisty text-white rounded-lg">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- User Modal -->
+  <div id="user-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <h3 class="text-xl font-bold mb-4" id="user-modal-title">Tambah User</h3>
+      <form id="user-form" class="space-y-4">
+        <input type="hidden" id="user-id">
+        <div>
+          <label class="block text-sm font-medium mb-1">Nama Lengkap</label>
+          <input type="text" id="user-fullname" required class="w-full px-4 py-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Email</label>
+          <input type="email" id="user-email" required class="w-full px-4 py-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Password</label>
+          <input type="password" id="user-password" class="w-full px-4 py-2 border rounded-lg" placeholder="Kosongkan jika tidak ubah">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">No. HP</label>
+          <input type="text" id="user-phone" class="w-full px-4 py-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Role</label>
+          <select id="user-role" required class="w-full px-4 py-2 border rounded-lg">
+            <option value="kasir">Kasir</option>
+            <option value="outlet_admin">Outlet Admin</option>
+            <option value="admin">Admin</option>
+            <option value="super_admin">Super Admin</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="user-active" checked class="w-4 h-4">
+          <label class="text-sm">Aktif</label>
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button type="button" onclick="closeModal('user-modal')" class="px-4 py-2 border rounded-lg">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-feisty text-white rounded-lg">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-sm mx-4">
+      <h3 class="text-xl font-bold mb-2">Konfirmasi Hapus</h3>
+      <p class="text-gray-600 mb-4" id="confirm-message">Apakah Anda yakin ingin menghapus ini?</p>
+      <input type="hidden" id="confirm-type">
+      <input type="hidden" id="confirm-id">
+      <div class="flex justify-end gap-2">
+        <button onclick="closeModal('confirm-modal')" class="px-4 py-2 border rounded-lg">Batal</button>
+        <button onclick="confirmDelete()" class="px-4 py-2 bg-red-500 text-white rounded-lg">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
     // ============================================
     // STATE
     // ============================================
     let currentUser = null;
     let currentSection = 'dashboard';
+    let categories = [];
 
     // ============================================
     // AUTH
@@ -302,18 +480,30 @@
       document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
       document.getElementById(`section-${section}`).classList.remove('hidden');
 
-      // Load data for section
       if (section === 'products') loadProducts();
       if (section === 'categories') loadCategories();
       if (section === 'outlets') loadOutlets();
       if (section === 'users') loadUsers();
+      if (section === 'bot') loadBotSettings();
+    }
+
+    // ============================================
+    // MODAL FUNCTIONS
+    // ============================================
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+      document.getElementById(modalId).classList.remove('flex');
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+      document.getElementById(modalId).classList.add('flex');
     }
 
     // ============================================
     // DATA LOADING
     // ============================================
     async function loadDashboard() {
-      // Load stats
       try {
         const [outletsRes, productsRes] = await Promise.all([
           fetch(`${SUPABASE_URL}/rest/v1/outlets?select=id`, {
@@ -334,13 +524,42 @@
       }
     }
 
+    async function loadCategories() {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/product_categories?select=*&order=sort_order`,
+          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+        );
+        categories = await response.json();
+        
+        const container = document.getElementById('categories-list');
+        if (!categories || categories.length === 0) {
+          container.innerHTML = '<p class="text-gray-500">Belum ada kategori</p>';
+          return;
+        }
+
+        container.innerHTML = categories.map(c => `
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+            <div>
+              <div class="font-medium">${c.name}</div>
+              <div class="text-sm text-gray-500">${c.slug}</div>
+            </div>
+            <div class="space-x-2">
+              <button onclick="editCategory('${c.id}')" class="text-feisty hover:underline">Edit</button>
+              <button onclick="deleteCategory('${c.id}')" class="text-red-500 hover:underline">Hapus</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load categories:', e);
+      }
+    }
+
     async function loadProducts() {
       try {
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/products?select=*,categories:product_categories(name)&order=created_at.desc`,
-          {
-            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
-          }
+          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
         );
         const products = await response.json();
         
@@ -361,8 +580,8 @@
               </span>
             </td>
             <td class="px-4 py-2">
-              <button class="text-feisty hover:underline mr-2">Edit</button>
-              <button class="text-red-500 hover:underline">Hapus</button>
+              <button onclick="editProduct('${p.id}')" class="text-feisty hover:underline mr-2">Edit</button>
+              <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:underline">Hapus</button>
             </td>
           </tr>
         `).join('');
@@ -371,46 +590,11 @@
       }
     }
 
-    async function loadCategories() {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/product_categories?select=*&order=sort_order`,
-          {
-            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
-          }
-        );
-        const categories = await response.json();
-        
-        const container = document.getElementById('categories-list');
-        if (!categories || categories.length === 0) {
-          container.innerHTML = '<p class="text-gray-500">Belum ada kategori</p>';
-          return;
-        }
-
-        container.innerHTML = categories.map(c => `
-          <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
-            <div>
-              <div class="font-medium">${c.name}</div>
-              <div class="text-sm text-gray-500">${c.slug}</div>
-            </div>
-            <div class="space-x-2">
-              <button class="text-feisty hover:underline">Edit</button>
-              <button class="text-red-500 hover:underline">Hapus</button>
-            </div>
-          </div>
-        `).join('');
-      } catch (e) {
-        console.error('Failed to load categories:', e);
-      }
-    }
-
     async function loadOutlets() {
       try {
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/outlets?select=*&order=name`,
-          {
-            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
-          }
+          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
         );
         const outlets = await response.json();
         
@@ -432,7 +616,8 @@
                 ${o.is_open ? 'Buka' : 'Tutup'}
               </span>
             </div>
-            <button class="text-feisty text-sm hover:underline">Edit</button>
+            <button onclick="editOutlet('${o.id}')" class="text-feisty text-sm hover:underline mr-2">Edit</button>
+            <button onclick="deleteOutlet('${o.id}')" class="text-red-500 text-sm hover:underline">Hapus</button>
           </div>
         `).join('');
       } catch (e) {
@@ -443,16 +628,14 @@
     async function loadUsers() {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/user_accounts?select=*,outlets(name)&order=created_at.desc`,
-          {
-            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
-          }
+          `${SUPABASE_URL}/rest/v1/user_accounts?select=*&order=created_at.desc`,
+          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
         );
         const users = await response.json();
         
         const tbody = document.getElementById('users-table');
         if (!users || users.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Belum ada user</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Belum ada user</td></tr>';
           return;
         }
 
@@ -463,11 +646,15 @@
             <td class="px-4 py-2">
               <span class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">${u.role}</span>
             </td>
-            <td class="px-4 py-2">${u.outlets?.name || '-'}</td>
+            <td class="px-4 py-2">${u.outlet_id || '-'}</td>
             <td class="px-4 py-2">
               <span class="px-2 py-1 rounded text-xs ${u.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                 ${u.is_active ? 'Aktif' : 'Nonaktif'}
               </span>
+            </td>
+            <td class="px-4 py-2">
+              <button onclick="editUser('${u.id}')" class="text-feisty hover:underline mr-2">Edit</button>
+              <button onclick="deleteUser('${u.id}')" class="text-red-500 hover:underline">Hapus</button>
             </td>
           </tr>
         `).join('');
@@ -477,29 +664,403 @@
     }
 
     // ============================================
-    // MODALS
+    // PRODUCT CRUD
     // ============================================
-    function showProductModal() {
-      alert('Modal tambah produk - akan dikembangkan');
+    function showProductModal(id = null) {
+      const isEdit = !!id;
+      document.getElementById('product-modal-title').textContent = isEdit ? 'Edit Produk' : 'Tambah Produk';
+      document.getElementById('product-id').value = id || '';
+      
+      // Load categories for select
+      const select = document.getElementById('product-category');
+      select.innerHTML = '<option value="">Pilih Kategori</option>' + 
+        categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+      if (id) {
+        // Find product and fill form
+        fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+        }).then(r => r.json()).then(data => {
+          if (data[0]) {
+            document.getElementById('product-name').value = data[0].name;
+            document.getElementById('product-emoji').value = data[0].emoji || '';
+            document.getElementById('product-category').value = data[0].category_id || '';
+            document.getElementById('product-price').value = data[0].price;
+            document.getElementById('product-description').value = data[0].description || '';
+            document.getElementById('product-available').checked = data[0].is_available;
+          }
+        });
+      }
+
+      openModal('product-modal');
     }
 
-    function showCategoryModal() {
-      alert('Modal tambah kategori - akan dikembangkan');
+    document.getElementById('product-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('product-id').value;
+      const data = {
+        name: document.getElementById('product-name').value,
+        emoji: document.getElementById('product-emoji').value,
+        category_id: document.getElementById('product-category').value,
+        price: parseFloat(document.getElementById('product-price').value),
+        description: document.getElementById('product-description').value,
+        is_available: document.getElementById('product-available').checked
+      };
+
+      try {
+        const method = id ? 'PATCH' : 'POST';
+        const url = id ? `${SUPABASE_URL}/rest/v1/products?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/products`;
+        
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          closeModal('product-modal');
+          loadProducts();
+        } else {
+          alert('Gagal menyimpan produk');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Error: ' + e.message);
+      }
+    });
+
+    function editProduct(id) { showProductModal(id); }
+    
+    function deleteProduct(id) {
+      document.getElementById('confirm-message').textContent = 'Apakah Anda yakin ingin menghapus produk ini?';
+      document.getElementById('confirm-type').value = 'product';
+      document.getElementById('confirm-id').value = id;
+      openModal('confirm-modal');
     }
 
-    function showOutletModal() {
-      alert('Modal tambah outlet - akan dikembangkan');
+    // ============================================
+    // CATEGORY CRUD
+    // ============================================
+    function showCategoryModal(id = null) {
+      const isEdit = !!id;
+      document.getElementById('category-modal-title').textContent = isEdit ? 'Edit Kategori' : 'Tambah Kategori';
+      document.getElementById('category-id').value = id || '';
+
+      if (id) {
+        const cat = categories.find(c => c.id === id);
+        if (cat) {
+          document.getElementById('category-name').value = cat.name;
+          document.getElementById('category-slug').value = cat.slug;
+          document.getElementById('category-sort').value = cat.sort_order || 0;
+        }
+      }
+
+      openModal('category-modal');
     }
 
-    function showUserModal() {
-      alert('Modal tambah user - akan dikembangkan');
+    document.getElementById('category-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('category-id').value;
+      const data = {
+        name: document.getElementById('category-name').value,
+        slug: document.getElementById('category-slug').value || document.getElementById('category-name').value.toLowerCase().replace(/\s+/g, '-'),
+        sort_order: parseInt(document.getElementById('category-sort').value) || 0
+      };
+
+      try {
+        const method = id ? 'PATCH' : 'POST';
+        const url = id ? `${SUPABASE_URL}/rest/v1/product_categories?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/product_categories`;
+        
+        await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify(data)
+        });
+
+        closeModal('category-modal');
+        loadCategories();
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    });
+
+    function editCategory(id) { showCategoryModal(id); }
+    
+    function deleteCategory(id) {
+      document.getElementById('confirm-message').textContent = 'Apakah Anda yakin ingin menghapus kategori ini?';
+      document.getElementById('confirm-type').value = 'category';
+      document.getElementById('confirm-id').value = id;
+      openModal('confirm-modal');
+    }
+
+    // ============================================
+    // OUTLET CRUD
+    // ============================================
+    function showOutletModal(id = null) {
+      const isEdit = !!id;
+      document.getElementById('outlet-modal-title').textContent = isEdit ? 'Edit Outlet' : 'Tambah Outlet';
+      document.getElementById('outlet-id').value = id || '';
+
+      if (id) {
+        fetch(`${SUPABASE_URL}/rest/v1/outlets?id=eq.${id}`, {
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+        }).then(r => r.json()).then(data => {
+          if (data[0]) {
+            document.getElementById('outlet-name').value = data[0].name;
+            document.getElementById('outlet-address').value = data[0].address;
+            document.getElementById('outlet-latitude').value = data[0].latitude || '';
+            document.getElementById('outlet-longitude').value = data[0].longitude || '';
+            document.getElementById('outlet-whatsapp').value = data[0].whatsapp_number || '';
+            document.getElementById('outlet-open').value = data[0].opening_time || '';
+            document.getElementById('outlet-close').value = data[0].closing_time || '';
+            document.getElementById('outlet-active').checked = data[0].is_active;
+            document.getElementById('outlet-open-status').checked = data[0].is_open;
+          }
+        });
+      }
+
+      openModal('outlet-modal');
+    }
+
+    document.getElementById('outlet-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('outlet-id').value;
+      const data = {
+        name: document.getElementById('outlet-name').value,
+        address: document.getElementById('outlet-address').value,
+        latitude: parseFloat(document.getElementById('outlet-latitude').value) || 0,
+        longitude: parseFloat(document.getElementById('outlet-longitude').value) || 0,
+        whatsapp_number: document.getElementById('outlet-whatsapp').value,
+        opening_time: document.getElementById('outlet-open').value,
+        closing_time: document.getElementById('outlet-close').value,
+        is_active: document.getElementById('outlet-active').checked,
+        is_open: document.getElementById('outlet-open-status').checked
+      };
+
+      try {
+        const method = id ? 'PATCH' : 'POST';
+        const url = id ? `${SUPABASE_URL}/rest/v1/outlets?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/outlets`;
+        
+        await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify(data)
+        });
+
+        closeModal('outlet-modal');
+        loadOutlets();
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    });
+
+    function editOutlet(id) { showOutletModal(id); }
+    
+    function deleteOutlet(id) {
+      document.getElementById('confirm-message').textContent = 'Apakah Anda yakin ingin menghapus outlet ini?';
+      document.getElementById('confirm-type').value = 'outlet';
+      document.getElementById('confirm-id').value = id;
+      openModal('confirm-modal');
+    }
+
+    // ============================================
+    // USER CRUD
+    // ============================================
+    function showUserModal(id = null) {
+      const isEdit = !!id;
+      document.getElementById('user-modal-title').textContent = isEdit ? 'Edit User' : 'Tambah User';
+      document.getElementById('user-id').value = id || '';
+
+      if (id) {
+        fetch(`${SUPABASE_URL}/rest/v1/user_accounts?id=eq.${id}`, {
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+        }).then(r => r.json()).then(data => {
+          if (data[0]) {
+            document.getElementById('user-fullname').value = data[0].full_name || '';
+            document.getElementById('user-email').value = data[0].email;
+            document.getElementById('user-phone').value = data[0].phone || '';
+            document.getElementById('user-role').value = data[0].role || 'kasir';
+            document.getElementById('user-active').checked = data[0].is_active;
+          }
+        });
+      }
+
+      openModal('user-modal');
+    }
+
+    document.getElementById('user-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('user-id').value;
+      const data = {
+        full_name: document.getElementById('user-fullname').value,
+        phone: document.getElementById('user-phone').value,
+        role: document.getElementById('user-role').value,
+        is_active: document.getElementById('user-active').checked
+      };
+
+      try {
+        const method = id ? 'PATCH' : 'POST';
+        const url = id ? `${SUPABASE_URL}/rest/v1/user_accounts?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/user_accounts`;
+        
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          closeModal('user-modal');
+          loadUsers();
+        } else {
+          alert('Gagal menyimpan user');
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    });
+
+    function editUser(id) { showUserModal(id); }
+    
+    function deleteUser(id) {
+      document.getElementById('confirm-message').textContent = 'Apakah Anda yakin ingin menghapus user ini?';
+      document.getElementById('confirm-type').value = 'user';
+      document.getElementById('confirm-id').value = id;
+      openModal('confirm-modal');
+    }
+
+    // ============================================
+    // BOT SETTINGS
+    // ============================================
+    async function loadBotSettings() {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/bot_settings?select=*&limit=1`, {
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+        });
+        const settings = await response.json();
+        
+        if (settings && settings.length > 0) {
+          document.getElementById('bot-enabled').checked = settings[0].is_enabled || false;
+          document.getElementById('ai-enabled').checked = settings[0].ai_enabled || false;
+          document.getElementById('greeting-message').value = settings[0].greeting_message || 'Halo! Selamat datang di Feisty. Ada yang bisa kami bantu?';
+        }
+      } catch (e) {
+        console.error('Failed to load bot settings:', e);
+      }
+    }
+
+    // ============================================
+    // DELETE CONFIRMATION
+    // ============================================
+    async function confirmDelete() {
+      const type = document.getElementById('confirm-type').value;
+      const id = document.getElementById('confirm-id').value;
+      
+      const tables = {
+        product: 'products',
+        category: 'product_categories',
+        outlet: 'outlets',
+        user: 'user_accounts'
+      };
+
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/${tables[type]}?id=eq.${id}`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        });
+
+        closeModal('confirm-modal');
+        
+        if (type === 'product') loadProducts();
+        if (type === 'category') loadCategories();
+        if (type === 'outlet') loadOutlets();
+        if (type === 'user') loadUsers();
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    // ============================================
+    // BOT SETTINGS
+    // ============================================
+    function saveBotSettings() {
+      alert('Pengaturan bot disimpan!');
+    }
+
+    // ============================================
+    // BOT: Save Settings
+    // ============================================
+    async function saveBotSettings() {
+      const botEnabled = document.getElementById('bot-enabled').checked;
+      const aiEnabled = document.getElementById('ai-enabled').checked;
+      const greetingMessage = document.getElementById('greeting-message').value;
+      
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/bot_settings?select=*&limit=1`, {
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+        });
+        const settings = await response.json();
+        
+        if (settings && settings.length > 0) {
+          await fetch(`${SUPABASE_URL}/rest/v1/bot_settings?id=eq.${settings[0].id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({
+              is_enabled: botEnabled,
+              ai_enabled: aiEnabled,
+              greeting_message: greetingMessage
+            })
+          });
+        } else {
+          await fetch(`${SUPABASE_URL}/rest/v1/bot_settings`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({
+              is_enabled: botEnabled,
+              ai_enabled: aiEnabled,
+              greeting_message: greetingMessage
+            })
+          });
+        }
+        
+        alert('Pengaturan bot disimpan!');
+      } catch (e) {
+        console.error('Failed to save bot settings:', e);
+        alert('Gagal menyimpan pengaturan bot');
+      }
     }
 
     // ============================================
     // UTILITIES
     // ============================================
     function formatCurrency(amount) {
-      return 'Rp ' + Math.round(amount).toLocaleString('id-ID');
+      return 'Rp ' + Math.round(amount || 0).toLocaleString('id-ID');
     }
   </script>
 </body>
