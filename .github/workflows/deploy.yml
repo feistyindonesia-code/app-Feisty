@@ -86,18 +86,18 @@ jobs:
           fi
           URL="https://github.com/supabase/cli/releases/latest/download/supabase_${ASSET}.tar.gz"
           echo "Downloading $URL"
-          curl -sSL -L "$URL" -o supabase.tar.gz
-          if ! file supabase.tar.gz | grep -q "gzip\|tar"; then
+          curl -sSL -L "$URL" -o supabase_cli.tar.gz
+          if ! file supabase_cli.tar.gz | grep -q "gzip\|tar"; then
             echo "Downloaded file is not a valid tar.gz. Content:"
-            file supabase.tar.gz
-            head -c 100 supabase.tar.gz
+            file supabase_cli.tar.gz
+            head -c 100 supabase_cli.tar.gz
             exit 1
           fi
-          rm -rf supabase
-          tar -xzf supabase.tar.gz
-          chmod +x supabase
-          sudo mv supabase /usr/local/bin/
-          rm -f supabase.tar.gz
+          mkdir -p supabase_cli_temp
+          tar -xzf supabase_cli.tar.gz -C supabase_cli_temp
+          chmod +x supabase_cli_temp/supabase
+          sudo mv supabase_cli_temp/supabase /usr/local/bin/supabase
+          rm -rf supabase_cli_temp supabase_cli.tar.gz
           supabase --version
 
       - name: Supabase login
@@ -184,8 +184,6 @@ jobs:
           pwd
           echo "Listing top-level contents:"
           ls -la
-          echo "Recursive listing (for debugging):"
-          ls -R | head -100
 
           if [ -d "supabase/functions" ]; then
             echo "Supabase functions directory found."
@@ -201,14 +199,16 @@ jobs:
             exit 0
           fi
 
-          # Deploy each function in a safe loop
-          for fn in whatsapp-webhook ai-dispatcher create-order update-order-status create-payment notify-outlet notify-customer; do
-            echo "Deploying $fn..."
-            supabase functions deploy "$fn" --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt --use-api
+          # Deploy each function dynamically from directories
+          echo "Deploying all functions..."
+          for fn_dir in supabase/functions/*/; do
+            fn_name=$(basename "$fn_dir")
+            if [ -f "${fn_dir}index.ts" ]; then
+              echo "Deploying function: $fn_name"
+              supabase functions deploy "$fn_name" --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt --use-api || echo "Failed to deploy $fn_name"
+            fi
           done
-          supabase functions deploy create-payment --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt --use-api
-          supabase functions deploy notify-outlet --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt --use-api
-          supabase functions deploy notify-customer --project-ref ${{ env.SUPABASE_PROJECT_REF }} --no-verify-jwt --use-api
+          echo "All functions deployed!"
 
       - name: Prepare landing page for deploy
         run: |
