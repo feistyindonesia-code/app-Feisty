@@ -70,6 +70,11 @@
       "id": "notify-customer",
       "port": 54321,
       "verify_jwt": false
+    },
+    {
+      "id": "weborder",
+      "port": 54321,
+      "verify_jwt": false
     }
   ]
 }
