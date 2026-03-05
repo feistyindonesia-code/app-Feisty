@@ -88,9 +88,9 @@ CREATE TABLE IF NOT EXISTS outlets (
   UNIQUE(organization_id, slug)
 );
 
-CREATE INDEX idx_outlets_organization_id ON outlets(organization_id);
-CREATE INDEX idx_outlets_active ON outlets(is_active);
-CREATE INDEX idx_outlets_coordinates ON outlets(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_outlets_organization_id ON outlets(organization_id);
+CREATE INDEX IF NOT EXISTS idx_outlets_active ON outlets(is_active);
+CREATE INDEX IF NOT EXISTS idx_outlets_coordinates ON outlets(latitude, longitude);
 
 -- ============================================================================
 -- USERS & AUTHENTICATION
@@ -111,10 +111,10 @@ CREATE TABLE IF NOT EXISTS user_accounts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_user_accounts_email ON user_accounts(email);
-CREATE INDEX idx_user_accounts_phone ON user_accounts(phone);
-CREATE INDEX idx_user_accounts_outlet_id ON user_accounts(outlet_id);
-CREATE INDEX idx_user_accounts_role ON user_accounts(role);
+CREATE INDEX IF NOT EXISTS idx_user_accounts_email ON user_accounts(email);
+CREATE INDEX IF NOT EXISTS idx_user_accounts_phone ON user_accounts(phone);
+CREATE INDEX IF NOT EXISTS idx_user_accounts_outlet_id ON user_accounts(outlet_id);
+CREATE INDEX IF NOT EXISTS idx_user_accounts_role ON user_accounts(role);
 
 -- ============================================================================
 -- PRODUCTS & CATEGORIES
@@ -151,10 +151,10 @@ CREATE TABLE IF NOT EXISTS products (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_products_organization_id ON products(organization_id);
-CREATE INDEX idx_products_category_id ON products(category_id);
-CREATE INDEX idx_products_outlet_id ON products(outlet_id);
-CREATE INDEX idx_products_available ON products(is_available);
+CREATE INDEX IF NOT EXISTS idx_products_organization_id ON products(organization_id);
+CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_products_outlet_id ON products(outlet_id);
+CREATE INDEX IF NOT EXISTS idx_products_available ON products(is_available);
 
 -- ============================================================================
 -- ORDERS
@@ -187,12 +187,12 @@ CREATE TABLE IF NOT EXISTS orders (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_orders_organization_id ON orders(organization_id);
-CREATE INDEX idx_orders_outlet_id ON orders(outlet_id);
-CREATE INDEX idx_orders_customer_id ON orders(customer_id);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_orders_created_at ON orders(created_at);
-CREATE INDEX idx_orders_order_number ON orders(order_number);
+CREATE INDEX IF NOT EXISTS idx_orders_organization_id ON orders(organization_id);
+CREATE INDEX IF NOT EXISTS idx_orders_outlet_id ON orders(outlet_id);
+CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
 
 -- ============================================================================
 -- ORDER ITEMS
@@ -209,8 +209,8 @@ CREATE TABLE IF NOT EXISTS order_items (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_order_items_order_id ON order_items(order_id);
-CREATE INDEX idx_order_items_product_id ON order_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id);
 
 -- ============================================================================
 -- PAYMENTS
@@ -230,10 +230,10 @@ CREATE TABLE IF NOT EXISTS payments (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_payments_order_id ON payments(order_id);
-CREATE INDEX idx_payments_organization_id ON payments(organization_id);
-CREATE INDEX idx_payments_status ON payments(status);
-CREATE INDEX idx_payments_transaction_id ON payments(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
+CREATE INDEX IF NOT EXISTS idx_payments_organization_id ON payments(organization_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+CREATE INDEX IF NOT EXISTS idx_payments_transaction_id ON payments(transaction_id);
 
 -- ============================================================================
 -- AUDIT LOGS
@@ -252,10 +252,10 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_audit_logs_organization_id ON audit_logs(organization_id);
-CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
-CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
-CREATE INDEX idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_organization_id ON audit_logs(organization_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
 
 -- ============================================================================
 -- ROW LEVEL SECURITY (RLS)
@@ -354,27 +354,27 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 -- Trigger for organizations
-CREATE TRIGGER update_organizations_updated_at BEFORE UPDATE ON organizations
+CREATE OR REPLACE TRIGGER update_organizations_updated_at BEFORE UPDATE ON organizations
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Trigger for outlets
-CREATE TRIGGER update_outlets_updated_at BEFORE UPDATE ON outlets
+CREATE OR REPLACE TRIGGER update_outlets_updated_at BEFORE UPDATE ON outlets
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Trigger for user_accounts
-CREATE TRIGGER update_user_accounts_updated_at BEFORE UPDATE ON user_accounts
+CREATE OR REPLACE TRIGGER update_user_accounts_updated_at BEFORE UPDATE ON user_accounts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Trigger for products
-CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
+CREATE OR REPLACE TRIGGER update_products_updated_at BEFORE UPDATE ON products
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Trigger for orders
-CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
+CREATE OR REPLACE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Trigger for payments
-CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
+CREATE OR REPLACE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Auto-generate order number
@@ -388,8 +388,8 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE SEQUENCE order_number_seq START 1000;
+CREATE SEQUENCE IF NOT EXISTS order_number_seq START 1000;
 
-CREATE TRIGGER auto_generate_order_number BEFORE INSERT ON orders
+CREATE OR REPLACE TRIGGER auto_generate_order_number BEFORE INSERT ON orders
   FOR EACH ROW EXECUTE FUNCTION generate_order_number();
 
