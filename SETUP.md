@@ -4,19 +4,17 @@
 
 ### 1. Configure Supabase Credentials
 
-**IMPORTANT:** Edit `frontend/config.js` and replace placeholder values:
+**IMPORTANT:** Edit `config.js` and replace the ANON_KEY placeholder value:
 
 ```javascript
-const SUPABASE_URL = "https://your-project.supabase.co";
-const SUPABASE_ANON_KEY = "your-anon-key";
+const SUPABASE_URL = "https://cvjpgicqruzolwtpiksa.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE";  // ← Ganti ini!
 ```
 
-**How to get these values:**
-1. Go to https://supabase.com/dashboard
-2. Select your project
-3. Go to **Project Settings** (gear icon) → **API**
-4. Copy **Project URL** to `SUPABASE_URL`
-5. Copy **anon public** key to `SUPABASE_ANON_KEY`
+**How to get ANON_KEY:**
+1. Go to https://supabase.com/dashboard/project/cvjpgicqruzolwtpiksa/settings/api
+2. Copy the **anon public** key (starts with `eyJ...`)
+3. Paste it in `config.js`
 
 ### 2. Database Migrations
 
