@@ -69,9 +69,9 @@ This means `SUPABASE_URL` is still set to placeholder value.
 
 ### Need to update multiple pages?
 
-The configuration is centralized in `frontend/config.js`. All pages load this file to get `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+The configuration is centralized in `config.js` at the root. All pages load this file to get `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
 
-If you have issues with path, make sure each HTML file loads the config:
+Make sure each HTML file includes:
 ```html
-<script src="../frontend/config.js"></script>
+<script src="../config.js"></script>
 ```
