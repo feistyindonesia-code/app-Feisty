@@ -110,12 +110,7 @@ CREATE INDEX IF NOT EXISTS idx_delivery_zones_org ON delivery_zones(organization
 CREATE INDEX IF NOT EXISTS idx_delivery_zones_outlet ON delivery_zones(outlet_id);
 
 -- Create spatial index if not exists
-DO $
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_delivery_zones_geom') THEN
-    CREATE INDEX idx_delivery_zones_geom ON delivery_zones USING GIST(polygon);
-  END IF;
-END $;
+CREATE INDEX IF NOT EXISTS idx_delivery_zones_geom ON delivery_zones USING GIST(polygon);
 
 -- 9. CREATE OUTLET HOURS TABLE
 CREATE TABLE IF NOT EXISTS outlet_hours (
