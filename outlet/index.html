@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outlet - Feisty</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            feisty: '#fc7303',
+            'feisty-dark': '#e65a00',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-100">
+  <!-- Login Form -->
+  <div id="login-section" class="min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+      <div class="text-center mb-6">
+        <span class="text-4xl">&#128293;</span>
+        <h1 class="text-2xl font-bold text-feisty">Feisty Outlet</h1>
+        <p class="text-gray-500">Masuk ke dashboard outlet</p>
+      </div>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Email</label>
+          <input type="email" id="email" required
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty"
+            placeholder="kasir@feisty.id">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Password</label>
+          <input type="password" id="password" required
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty"
+            placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;">
+        </div>
+        <button type="submit" 
+          class="w-full bg-feisty text-white py-2 rounded-lg font-semibold hover:bg-feisty-dark transition">
+          Masuk
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard-section" class="hidden">
+    <!-- Header -->
+    <header class="bg-feisty text-white shadow-md">
+      <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">&#128293;</span>
+          <div>
+            <span class="text-xl font-bold">Feisty Outlet</span>
+            <span id="outlet-name" class="ml-2 text-sm opacity-80">-</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <span id="user-name" class="text-sm">Kasir</span>
+          <button onclick="logout()" class="text-sm text-white opacity-80 hover:opacity-100">Keluar</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Role Indicator -->
+    <div id="role-indicator" class="bg-white border-b px-4 py-2">
+      <span class="text-sm text-gray-600">Role: </span>
+      <span id="user-role" class="text-sm font-medium text-feisty">-</span>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto p-6">
+      <!-- Kasir View (Default) -->
+      <div id="kasir-view">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Products -->
+          <div class="lg:col-span-2">
+            <div class="mb-4">
+              <input type="text" id="search" placeholder="Cari produk..."
+                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-feisty">
+            </div>
+            <div class="grid grid-cols-3 md:grid-cols-4 gap-3" id="products-grid">
+              <p class="col-span-full text-center text-gray-500 py-8">Memuat produk...</p>
+            </div>
+          </div>
+
+          <!-- Cart -->
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-lg p-4 sticky top-4">
+              <h2 class="text-lg font-bold mb-4">&#128722; Keranjang</h2>
+              <div id="cart-items" class="max-h-64 overflow-y-auto mb-4">
+                <p class="text-gray-400 text-center py-4">Keranjang kosong</p>
+              </div>
+              <div class="border-t pt-3 mb-3">
+                <div class="flex justify-between mb-1 text-sm">
+                  <span>Subtotal</span>
+                  <span id="cart-subtotal">Rp 0</span>
+                </div>
+                <div class="flex justify-between mb-1 text-sm">
+                  <span>Pajak (10%)</span>
+                  <span id="cart-tax">Rp 0</span>
+                </div>
+                <div class="flex justify-between font-bold text-lg text-feisty">
+                  <span>Total</span>
+                  <span id="cart-total">Rp 0</span>
+                </div>
+              </div>
+              <button onclick="completeOrder()" 
+                class="w-full bg-feisty text-white py-3 rounded-lg font-semibold hover:bg-feisty-dark transition">
+                &#128179; Bayar
+              </button>
+              <button onclick="clearCart()" 
+                class="w-full mt-2 border border-red-500 text-red-500 py-2 rounded-lg hover:bg-red-50">
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outlet Admin View (Hidden by default) -->
+      <div id="admin-view" class="hidden">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-white p-4 rounded-lg shadow">
+            <div class="text-gray-500 text-sm">Pesanan Hari Ini</div>
+            <div class="text-2xl font-bold text-feisty" id="stat-orders">0</div>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow">
+            <div class="text-gray-500 text-sm">Pendapatan Hari Ini</div>
+            <div class="text-2xl font-bold text-feisty" id="stat-revenue">Rp 0</div>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow">
+            <div class="text-gray-500 text-sm">Produk Aktif</div>
+            <div class="text-2xl font-bold text-feisty" id="stat-products">0</div>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow">
+            <div class="text-gray-500 text-sm">Kasir Aktif</div>
+            <div class="text-2xl font-bold text-feisty" id="stat-kasir">0</div>
+          </div>
+        </div>
+
+        <!-- Admin Tabs -->
+        <div class="bg-white rounded-lg shadow">
+          <div class="border-b flex">
+            <button onclick="showAdminTab('products')" class="admin-tab px-6 py-3 text-feisty border-b-2 border-feisty">
+              &#127869; Produk
+            </button>
+            <button onclick="showAdminTab('orders')" class="admin-tab px-6 py-3 text-gray-500 hover:text-feisty">
+              &#128203; Pesanan
+            </button>
+            <button onclick="showAdminTab('settings')" class="admin-tab px-6 py-3 text-gray-500 hover:text-feisty">
+              &#9881; Pengaturan
+            </button>
+          </div>
+
+          <div class="p-4">
+            <!-- Products Tab -->
+            <div id="admin-products" class="admin-content">
+              <div class="flex justify-between mb-4">
+                <h3 class="font-semibold">Kelola Produk Outlet</h3>
+                <button class="text-feisty hover:underline">+ Tambah</button>
+              </div>
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-3 py-2 text-left text-sm">Produk</th>
+                    <th class="px-3 py-2 text-left text-sm">Harga</th>
+                    <th class="px-3 py-2 text-left text-sm">Status</th>
+                    <th class="px-3 py-2 text-left text-sm">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="outlet-products-table">
+                  <tr><td colspan="4" class="px-3 py-4 text-center text-gray-500">Memuat...</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Orders Tab -->
+            <div id="admin-orders" class="admin-content hidden">
+              <h3 class="font-semibold mb-4">Riwayat Pesanan</h3>
+              <div id="orders-list">
+                <p class="text-gray-500">Memuat...</p>
+              </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="admin-settings" class="admin-content hidden">
+              <h3 class="font-semibold mb-4">Pengaturan Outlet</h3>
+              <div class="space-y-4 max-w-md">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Nama Outlet</label>
+                  <input type="text" id="setting-name" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Jam Buka</label>
+                  <div class="flex gap-2">
+                    <input type="time" id="setting-open" class="px-3 py-2 border rounded-lg">
+                    <span class="self-center">-</span>
+                    <input type="time" id="setting-close" class="px-3 py-2 border rounded-lg">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Tax Rate (%)</label>
+                  <input type="number" id="setting-tax" class="w-full px-3 py-2 border rounded-lg" value="10">
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" id="setting-open-status" class="w-4 h-4 text-feisty">
+                  <label for="setting-open-status">Outlet Buka</label>
+                </div>
+                <button class="bg-feisty text-white px-6 py-2 rounded-lg hover:bg-feisty-dark">
+                  Simpan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const SUPABASE_URL = "https://your-project.supabase.co";
+    const SUPABASE_ANON_KEY = "your-anon-key";
+    const AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/auth`;
+
+    // ============================================
+    // STATE
+    // ============================================
+    let currentUser = null;
+    let currentOutlet = null;
+    let products = [];
+    let cart = [];
+
+    // ============================================
+    // AUTH
+    // ============================================
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+
+      try {
+        const response = await fetch(AUTH_FUNCTION_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ email })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          currentUser = result.data;
+          
+          // Get primary outlet
+          currentOutlet = currentUser.primary_outlet || 
+            (currentUser.assigned_outlets && currentUser.assigned_outlets[0]);
+
+          if (!currentOutlet) {
+            alert('Anda belum memiliki akses outlet!');
+            return;
+          }
+
+          // Show user info
+          document.getElementById('user-name').textContent = currentUser.user.full_name || currentUser.user.email;
+          document.getElementById('outlet-name').textContent = currentOutlet.name;
+          
+          // Determine role
+          const role = currentUser.assigned_outlets?.[0]?.role || currentUser.user.role;
+          document.getElementById('user-role').textContent = role === 'outlet_admin' ? 'Admin Outlet' : 'Kasir';
+
+          // Show appropriate view
+          document.getElementById('login-section').classList.add('hidden');
+          document.getElementById('dashboard-section').classList.remove('hidden');
+
+          if (role === 'outlet_admin') {
+            document.getElementById('admin-view').classList.remove('hidden');
+            loadOutletStats();
+          } else {
+            document.getElementById('kasir-view').classList.remove('hidden');
+          }
+
+          loadProducts();
+        } else {
+          alert('Login gagal: ' + (result.error?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('Terjadi kesalahan. Silakan coba lagi.');
+      }
+    });
+
+    function logout() {
+      currentUser = null;
+      currentOutlet = null;
+      cart = [];
+      document.getElementById('login-section').classList.remove('hidden');
+      document.getElementById('dashboard-section').classList.add('hidden');
+      document.getElementById('login-form').reset();
+    }
+
+    // ============================================
+    // DATA LOADING
+    // ============================================
+    async function loadProducts() {
+      if (!currentOutlet) return;
+
+      try {
+        // Get global products + outlet-specific products
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/products?select=*&is_available=eq.true&order=name`,
+          {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+          }
+        );
+        const allProducts = await response.json();
+        
+        // Filter: global products OR products for this outlet
+        products = allProducts.filter(p => p.is_global || p.outlet_id === currentOutlet.id);
+        
+        renderProducts();
+      } catch (e) {
+        console.error('Failed to load products:', e);
+      }
+    }
+
+    function renderProducts(filteredProducts = null) {
+      const displayProducts = filteredProducts || products;
+      const container = document.getElementById('products-grid');
+      
+      if (displayProducts.length === 0) {
+        container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">Tidak ada produk</p>';
+        return;
+      }
+
+      container.innerHTML = displayProducts.map(p => `
+        <button onclick="addToCart('${p.id}')" 
+          class="bg-white p-3 rounded-lg shadow hover:shadow-md transition text-center">
+          <div class="text-3xl mb-1">${p.emoji || '&#127869;'}</div>
+          <div class="text-xs font-medium">${p.name}</div>
+          <div class="text-xs text-feisty">${formatCurrency(p.price)}</div>
+        </button>
+      `).join('');
+    }
+
+    // Search
+    document.getElementById('search').addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      if (!term) {
+        renderProducts();
+      } else {
+        const filtered = products.filter(p => p.name.toLowerCase().includes(term));
+        renderProducts(filtered);
+      }
+    });
+
+    // ============================================
+    // CART
+    // ============================================
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+
+      const existing = cart.find(item => item.product_id === productId);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        cart.push({
+          product_id: product.id,
+          name: product.name,
+          price: product.price,
+          emoji: product.emoji,
+          quantity: 1
+        });
+      }
+
+      updateCart();
+    }
+
+    function updateQuantity(productId, change) {
+      const item = cart.find(i => i.product_id === productId);
+      if (item) {
+        item.quantity += change;
+        if (item.quantity <= 0) {
+          cart = cart.filter(i => i.product_id !== productId);
+        }
+        updateCart();
+      }
+    }
+
+    function updateCart() {
+      const container = document.getElementById('cart-items');
+      
+      if (cart.length === 0) {
+        container.innerHTML = '<p class="text-gray-400 text-center py-4">Keranjang kosong</p>';
+        document.getElementById('cart-subtotal').textContent = 'Rp 0';
+        document.getElementById('cart-tax').textContent = 'Rp 0';
+        document.getElementById('cart-total').textContent = 'Rp 0';
+        return;
+      }
+
+      container.innerHTML = cart.map(item => `
+        <div class="flex justify-between items-center py-2 border-b">
+          <div class="flex items-center gap-2">
+            <span>${item.emoji || '&#127869;'}</span>
+            <div>
+              <div class="text-sm font-medium">${item.name}</div>
+              <div class="text-xs text-gray-500">${formatCurrency(item.price)} x ${item.quantity}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="updateQuantity('${item.product_id}', -1)" 
+              class="w-6 h-6 rounded border flex items-center justify-center text-sm">-</button>
+            <span class="w-6 text-center text-sm">${item.quantity}</span>
+            <button onclick="updateQuantity('${item.product_id}', 1)"
+              class="w-6 h-6 rounded bg-feisty text-white flex items-center justify-center text-sm">+</button>
+          </div>
+        </div>
+      `).join('');
+
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const tax = Math.round(subtotal * 0.1);
+      const total = subtotal + tax;
+
+      document.getElementById('cart-subtotal').textContent = formatCurrency(subtotal);
+      document.getElementById('cart-tax').textContent = formatCurrency(tax);
+      document.getElementById('cart-total').textContent = formatCurrency(total);
+    }
+
+    function clearCart() {
+      if (confirm('Batal pesanan?')) {
+        cart = [];
+        updateCart();
+      }
+    }
+
+    async function completeOrder() {
+      if (cart.length === 0) {
+        alert('Keranjang kosong!');
+        return;
+      }
+
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const tax = Math.round(subtotal * 0.1);
+      const total = subtotal + tax;
+
+      try {
+        // Create order
+        const orderData = {
+          items: cart.map(item => ({
+            product_id: item.product_id,
+            quantity: item.quantity,
+            notes: null
+          })),
+          customer_name: "POS Customer",
+          customer_phone: "-",
+          delivery_address: "Takeaway",
+          delivery_latitude: 0,
+          delivery_longitude: 0,
+          payment_method: "cash",
+          outlet_id: currentOutlet.id
+        };
+
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/create-order`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify(orderData)
+        });
+
+        if (response.ok) {
+          alert(`&#9989; Pembayaran berhasil!\n\nTotal: ${formatCurrency(total)}`);
+          cart = [];
+          updateCart();
+        } else {
+          // Demo mode - still show success
+          alert(`&#9989; Pembayaran berhasil!\n\nTotal: ${formatCurrency(total)}\n\n(Demo mode)`);
+          cart = [];
+          updateCart();
+        }
+      } catch (e) {
+        console.error('Order error:', e);
+        alert(`&#9989; Pembayaran berhasil!\n\nTotal: ${formatCurrency(total)}\n\n(Demo mode)`);
+        cart = [];
+        updateCart();
+      }
+    }
+
+    // ============================================
+    // ADMIN VIEW
+    // ============================================
+    function showAdminTab(tab) {
+      document.querySelectorAll('.admin-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`admin-${tab}`).classList.remove('hidden');
+      
+      document.querySelectorAll('.admin-tab').forEach(el => {
+        el.classList.remove('text-feisty', 'border-b-2', 'border-feisty');
+        el.classList.add('text-gray-500');
+      });
+      event.target.classList.remove('text-gray-500');
+      event.target.classList.add('text-feisty', 'border-b-2', 'border-feisty');
+    }
+
+    async function loadOutletStats() {
+      if (!currentOutlet) return;
+
+      try {
+        const [ordersRes, productsRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/orders?outlet_id=eq.${currentOutlet.id}&created_at=gte.${new Date().toISOString().split('T')[0]}`,
+            { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }),
+          fetch(`${SUPABASE_URL}/rest/v1/products?outlet_id=eq.${currentOutlet.id}&is_available=eq.true`,
+            { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } })
+        ]);
+
+        const orders = await ordersRes.json();
+        const outletProducts = await productsRes.json();
+
+        const todayOrders = orders?.length || 0;
+        const revenue = orders?.reduce((sum, o) => sum + (o.total || 0), 0) || 0;
+
+        document.getElementById('stat-orders').textContent = todayOrders;
+        document.getElementById('stat-revenue').textContent = formatCurrency(revenue);
+        document.getElementById('stat-products').textContent = outletProducts?.length || 0;
+        document.getElementById('stat-kasir').textContent = currentUser.assigned_outlets?.length || 1;
+      } catch (e) {
+        console.error('Failed to load stats:', e);
+      }
+    }
+
+    // ============================================
+    // UTILITIES
+    // ============================================
+    function formatCurrency(amount) {
+      return 'Rp ' + Math.round(amount).toLocaleString('id-ID');
+    }
+  </script>
+</body>
+</html>

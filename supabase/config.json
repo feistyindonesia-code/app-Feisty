@@ -75,6 +75,21 @@
       "id": "weborder",
       "port": 54321,
       "verify_jwt": false
+    },
+    {
+      "id": "auth",
+      "port": 54321,
+      "verify_jwt": false
+    },
+    {
+      "id": "admin-products",
+      "port": 54321,
+      "verify_jwt": false
+    },
+    {
+      "id": "outlet-users",
+      "port": 54321,
+      "verify_jwt": false
     }
   ]
 }

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Feisty — Made with Heart</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -30,33 +30,58 @@
 </head>
 <body class="text-gray-800">
 
-<!-- LANGUAGE SWITCH -->
-<div class="fixed top-5 right-5 z-50 flex gap-2">
-  <button onclick="setLang('en')" class="px-3 py-1 bg-white shadow rounded hover:bg-feisty hover:text-white transition">EN</button>
-  <button onclick="setLang('id')" class="px-3 py-1 bg-white shadow rounded hover:bg-feisty hover:text-white transition">ID</button>
-  <button onclick="setLang('ar')" class="px-3 py-1 bg-white shadow rounded hover:bg-feisty hover:text-white transition">AR</button>
-</div>
-
 <!-- HERO -->
 <section class="relative min-h-screen flex items-center justify-center text-center px-6 food-pattern">
   <div class="max-w-3xl">
     <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
       FEISTY<br>
-      <span class="text-feisty" data-i18n="heroTitle1"></span>
-      <span data-i18n="heroTitle2"></span>
+      <span class="text-feisty">Made with Heart.</span>
     </h1>
-    <p class="text-lg text-gray-600 mb-8" data-i18n="heroDesc"></p>
+    <p class="text-lg text-gray-600 mb-8">
+      Feisty menghadirkan rasa yang hangat, bahan berkualitas, dan momen sederhana yang bisa dinikmati bersama.
+    </p>
     <div class="flex flex-col md:flex-row justify-center gap-4 mb-6">
-      <a href="https://wa.me/6287787655880" class="bg-feisty text-white px-8 py-3 rounded-full font-semibold shadow-md hover:shadow-lg hover:scale-105 transition" data-i18n="orderNow"></a>
-      <a href="#favorites" class="bg-white border border-feisty text-feisty px-8 py-3 rounded-full shadow-sm hover:bg-feisty hover:text-white transition" data-i18n="explore"></a>
+      <a href="order/" class="bg-feisty text-white px-8 py-3 rounded-full font-semibold shadow-md hover:shadow-lg hover:scale-105 transition">
+        Pesan Sekarang
+      </a>
+      <a href="#favorites" class="bg-white border border-feisty text-feisty px-8 py-3 rounded-full shadow-sm hover:bg-feisty hover:text-white transition">
+        Lihat Menu
+      </a>
     </div>
-    <p class="text-sm text-gray-500" data-i18n="expanding"></p>
+    <p class="text-sm text-gray-500">Berbagi senyum di seluruh Indonesia.</p>
+  </div>
+</section>
+
+<!-- QUICK ACCESS -->
+<section class="py-16 px-6 max-w-4xl mx-auto">
+  <h2 class="text-3xl font-bold text-center mb-8">Akses Cepat</h2>
+  <div class="grid md:grid-cols-3 gap-6">
+    <!-- Web Order -->
+    <a href="order/" class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition p-6 text-center">
+      <div class="text-4xl mb-3">🛒</div>
+      <h3 class="text-xl font-bold mb-2">Web Order</h3>
+      <p class="text-gray-600 text-sm">Pesan online untuk delivery atau takeaway</p>
+    </a>
+    
+    <!-- Admin -->
+    <a href="admin/" class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition p-6 text-center">
+      <div class="text-4xl mb-3">⚙️</div>
+      <h3 class="text-xl font-bold mb-2">Admin</h3>
+      <p class="text-gray-600 text-sm">Kelola menu, outlet, dan user</p>
+    </a>
+    
+    <!-- Outlet POS -->
+    <a href="outlet/" class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition p-6 text-center">
+      <div class="text-4xl mb-3">🏪</div>
+      <h3 class="text-xl font-bold mb-2">Outlet POS</h3>
+      <p class="text-gray-600 text-sm">Kasir dan manajemen outlet</p>
+    </a>
   </div>
 </section>
 
 <!-- FAVORITES -->
 <section id="favorites" class="py-20 px-6 max-w-6xl mx-auto">
-  <h2 class="text-3xl font-bold text-center mb-12">Our Favorites</h2>
+  <h2 class="text-3xl font-bold text-center mb-12">Menu Favorit</h2>
   <div class="grid md:grid-cols-3 gap-8">
     <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition">
       <div class="h-48 bg-warm flex items-center justify-center text-feisty font-semibold text-xl">Signature Box</div>
@@ -81,15 +106,10 @@
 
 <!-- BRAND MESSAGE -->
 <section class="py-20 bg-white text-center px-6">
-  <h2 class="text-3xl font-bold mb-6" data-i18n="problemTitle"></h2>
-  <p class="text-gray-600 max-w-2xl mx-auto" data-i18n="problemDesc"></p>
-</section>
-
-<!-- GROWING WITH YOU -->
-<section class="py-20 bg-warm text-center px-6">
-  <h2 class="text-3xl font-bold mb-6" data-i18n="scaleTitle"></h2>
-  <p class="text-gray-700 max-w-2xl mx-auto mb-8" data-i18n="scaleDesc"></p>
-  <a href="https://wa.me/6287787655880" class="bg-feisty text-white px-8 py-3 rounded-full shadow hover:shadow-lg hover:scale-105 transition" data-i18n="request"></a>
+  <h2 class="text-3xl font-bold mb-6">Makanan Enak. Momen Hangat.</h2>
+  <p class="text-gray-600 max-w-2xl mx-auto">
+    Bagi kami, Feisty bukan hanya soal makan. Ini tentang menikmati hidangan sederhana yang memuaskan bersama orang terdekat.
+  </p>
 </section>
 
 <!-- TECH STACK -->
@@ -110,60 +130,6 @@
   <p>© 2026 FEISTY. Made with ❤️</p>
   <p class="text-sm mt-2">Enterprise digital ecosystem for F&B multi-outlet</p>
 </footer>
-
-<script>
-const translations = {
-  en: {
-    heroTitle1: "Made with Heart.",
-    heroTitle2: "Made for Everyone.",
-    heroDesc: "Feisty brings people together through comforting flavors, quality ingredients, and moments worth sharing.",
-    orderNow: "Order Now",
-    explore: "See Our Favorites",
-    expanding: "Sharing smiles across Indonesia.",
-    problemTitle: "Good Food. Good Moments.",
-    problemDesc: "At Feisty, it's not just about eating. It's about enjoying simple, satisfying food with the people you care about.",
-    scaleTitle: "Growing with You",
-    scaleDesc: "Wherever you are, we hope Feisty can be part of your everyday moments — warm, friendly, and always welcoming.",
-    request: "Find Feisty Near You"
-  },
-  id: {
-    heroTitle1: "Dibuat dengan Hati.",
-    heroTitle2: "Untuk Semua.",
-    heroDesc: "Feisty menghadirkan rasa yang hangat, bahan berkualitas, dan momen sederhana yang bisa dinikmati bersama.",
-    orderNow: "Pesan Sekarang",
-    explore: "Lihat Menu Favorit",
-    expanding: "Berbagi senyum di seluruh Indonesia.",
-    problemTitle: "Makanan Enak. Momen Hangat.",
-    problemDesc: "Bagi kami, Feisty bukan hanya soal makan. Ini tentang menikmati hidangan sederhana yang memuaskan bersama orang terdekat.",
-    scaleTitle: "Tumbuh Bersama Kamu",
-    scaleDesc: "Di mana pun kamu berada, kami ingin Feisty menjadi bagian dari keseharianmu — hangat, ramah, dan selalu menyenangkan.",
-    request: "Temukan Feisty di Sekitarmu"
-  },
-  ar: {
-    heroTitle1: "صُنع بحب.",
-    heroTitle2: "للجميع.",
-    heroDesc: "فيستي تجمع الناس من خلال نكهات دافئة ومكونات عالية الجودة ولحظات جميلة تُشارك مع من تحب.",
-    orderNow: "اطلب الآن",
-    explore: "اكتشف المفضلات",
-    expanding: "نشارك الابتسامة في جميع أنحاء إندونيسيا.",
-    problemTitle: "طعام لذيذ. لحظات دافئة.",
-    problemDesc: "في فيستي، الأمر لا يتعلق بالطعام فقط، بل بلحظات بسيطة وممتعة مع العائلة والأصدقاء.",
-    scaleTitle: "ننمو معكم",
-    scaleDesc: "أينما كنتم، نأمل أن تكون فيستي جزءًا من يومكم — دافئة، ودودة، وقريبة من القلب.",
-    request: "اعثر على فيستي بالقرب منك"
-  }
-};
-
-function setLang(lang) {
-  document.documentElement.lang = lang;
-  document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    el.innerText = translations[lang][el.getAttribute('data-i18n')];
-  });
-}
-
-setLang('id');
-</script>
 
 </body>
 </html>

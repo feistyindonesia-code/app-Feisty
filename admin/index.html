@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Feisty</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            feisty: '#fc7303',
+            'feisty-dark': '#e65a00',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-100">
+  <!-- Login Form -->
+  <div id="login-section" class="min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+      <div class="text-center mb-6">
+        <span class="text-4xl">🔥</span>
+        <h1 class="text-2xl font-bold text-feisty">Feisty Admin</h1>
+        <p class="text-gray-500">Masuk ke dashboard</p>
+      </div>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Email</label>
+          <input type="email" id="email" required
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty"
+            placeholder="admin@feisty.id">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Password</label>
+          <input type="password" id="password" required
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty"
+            placeholder="••••••••">
+        </div>
+        <button type="submit" 
+          class="w-full bg-feisty text-white py-2 rounded-lg font-semibold hover:bg-feisty-dark transition">
+          Masuk
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard-section" class="hidden">
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+      <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🔥</span>
+          <span class="text-xl font-bold text-feisty">Feisty Admin</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span id="user-name" class="text-sm text-gray-600">Admin</span>
+          <button onclick="logout()" class="text-sm text-red-500 hover:underline">Keluar</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sidebar & Content -->
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="w-64 bg-white min-h-screen shadow-md">
+        <nav class="p-4 space-y-2">
+          <a href="#" onclick="showSection('dashboard')" class="nav-item block px-4 py-2 rounded hover:bg-orange-50 text-gray-700">
+            📊 Dashboard
+          </a>
+          <a href="#" onclick="showSection('products')" class="nav-item block px-4 py-2 rounded hover:bg-orange-50 text-gray-700">
+            🍔 Produk
+          </a>
+          <a href="#" onclick="showSection('categories')" class="nav-item block px-4 py-2 rounded hover:bg-orange-50 text-gray-700">
+            📁 Kategori
+          </a>
+          <a href="#" onclick="showSection('outlets')" class="nav-item block px-4 py-2 rounded hover:bg-orange-50 text-gray-700">
+            🏪 Outlet
+          </a>
+          <a href="#" onclick="showSection('users')" class="nav-item block px-4 py-2 rounded hover:bg-orange-50 text-gray-700">
+            👥 User & Kasir
+          </a>
+          <a href="#" onclick="showSection('customers')" class="nav-item block px-4 py-2 rounded hover:bg-orange-50 text-gray-700">
+            🧑 Pelanggan
+          </a>
+          <a href="#" onclick="showSection('orders')" class="nav-item block px-4 py-2 rounded hover:bg-orange-50 text-gray-700">
+            📋 Pesanan
+          </a>
+          <a href="#" onclick="showSection('bot')" class="nav-item block px-4 py-2 rounded hover:bg-orange-50 text-gray-700">
+            🤖 Bot Settings
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 p-6">
+        <!-- Dashboard Section -->
+        <div id="section-dashboard" class="section">
+          <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-lg shadow">
+              <div class="text-gray-500 text-sm">Total Outlet</div>
+              <div class="text-2xl font-bold text-feisty" id="stat-outlets">0</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+              <div class="text-gray-500 text-sm">Total Produk</div>
+              <div class="text-2xl font-bold text-feisty" id="stat-products">0</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+              <div class="text-gray-500 text-sm">Pesanan Hari Ini</div>
+              <div class="text-2xl font-bold text-feisty" id="stat-orders">0</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+              <div class="text-gray-500 text-sm">Total Pelanggan</div>
+              <div class="text-2xl font-bold text-feisty" id="stat-customers">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products Section -->
+        <div id="section-products" class="section hidden">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Kelola Produk</h2>
+            <button onclick="showProductModal()" class="bg-feisty text-white px-4 py-2 rounded-lg hover:bg-feisty-dark">
+              + Tambah Produk
+            </button>
+          </div>
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left">Nama</th>
+                  <th class="px-4 py-2 text-left">Kategori</th>
+                  <th class="px-4 py-2 text-left">Harga</th>
+                  <th class="px-4 py-2 text-left">Status</th>
+                  <th class="px-4 py-2 text-left">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="products-table">
+                <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Memuat...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Categories Section -->
+        <div id="section-categories" class="section hidden">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Kelola Kategori</h2>
+            <button onclick="showCategoryModal()" class="bg-feisty text-white px-4 py-2 rounded-lg hover:bg-feisty-dark">
+              + Tambah Kategori
+            </button>
+          </div>
+          <div class="bg-white rounded-lg shadow p-4">
+            <div id="categories-list" class="space-y-2">
+              <p class="text-gray-500">Memuat...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Outlets Section -->
+        <div id="section-outlets" class="section hidden">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Kelola Outlet</h2>
+            <button onclick="showOutletModal()" class="bg-feisty text-white px-4 py-2 rounded-lg hover:bg-feisty-dark">
+              + Tambah Outlet
+            </button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="outlets-grid">
+            <p class="text-gray-500 col-span-full">Memuat...</p>
+          </div>
+        </div>
+
+        <!-- Users Section -->
+        <div id="section-users" class="section hidden">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Kelola User & Kasir</h2>
+            <button onclick="showUserModal()" class="bg-feisty text-white px-4 py-2 rounded-lg hover:bg-feisty-dark">
+              + Tambah User
+            </button>
+          </div>
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left">Nama</th>
+                  <th class="px-4 py-2 text-left">Email</th>
+                  <th class="px-4 py-2 text-left">Role</th>
+                  <th class="px-4 py-2 text-left">Outlet</th>
+                  <th class="px-4 py-2 text-left">Status</th>
+                </tr>
+              </thead>
+              <tbody id="users-table">
+                <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Memuat...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bot Settings Section -->
+        <div id="section-bot" class="section hidden">
+          <h2 class="text-2xl font-bold mb-6">Pengaturan Bot</h2>
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium">Bot Aktif</div>
+                  <div class="text-sm text-gray-500">Aktifkan auto-reply WhatsApp</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="bot-enabled" class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-feisty"></div>
+                </label>
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium">AI Response</div>
+                  <div class="text-sm text-gray-500">Gunakan AI untuk ответов</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="ai-enabled" class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-feisty"></div>
+                </label>
+              </div>
+              <div>
+                <label class="block font-medium mb-1">Pesan Salam</label>
+                <textarea id="greeting-message" rows="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-feisty">Halo! Selamat datang di Feisty. Ada yang bisa kami bantu?</textarea>
+              </div>
+              <button class="bg-feisty text-white px-6 py-2 rounded-lg hover:bg-feisty-dark">
+                Simpan Pengaturan
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const SUPABASE_URL = "https://your-project.supabase.co";
+    const SUPABASE_ANON_KEY = "your-anon-key";
+    const AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/auth`;
+
+    // ============================================
+    // STATE
+    // ============================================
+    let currentUser = null;
+    let currentSection = 'dashboard';
+
+    // ============================================
+    // AUTH
+    // ============================================
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch(AUTH_FUNCTION_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          currentUser = result.data;
+          document.getElementById('user-name').textContent = currentUser.user.full_name || currentUser.user.email;
+          document.getElementById('login-section').classList.add('hidden');
+          document.getElementById('dashboard-section').classList.remove('hidden');
+          loadDashboard();
+        } else {
+          alert('Login gagal: ' + (result.error?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('Terjadi kesalahan. Silakan coba lagi.');
+      }
+    });
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('login-section').classList.remove('hidden');
+      document.getElementById('dashboard-section').classList.add('hidden');
+      document.getElementById('login-form').reset();
+    }
+
+    // ============================================
+    // NAVIGATION
+    // ============================================
+    function showSection(section) {
+      currentSection = section;
+      document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`section-${section}`).classList.remove('hidden');
+
+      // Load data for section
+      if (section === 'products') loadProducts();
+      if (section === 'categories') loadCategories();
+      if (section === 'outlets') loadOutlets();
+      if (section === 'users') loadUsers();
+    }
+
+    // ============================================
+    // DATA LOADING
+    // ============================================
+    async function loadDashboard() {
+      // Load stats
+      try {
+        const [outletsRes, productsRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/outlets?select=id`, {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+          }),
+          fetch(`${SUPABASE_URL}/rest/v1/products?select=id`, {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+          })
+        ]);
+        
+        const outlets = await outletsRes.json();
+        const products = await productsRes.json();
+
+        document.getElementById('stat-outlets').textContent = outlets?.length || 0;
+        document.getElementById('stat-products').textContent = products?.length || 0;
+      } catch (e) {
+        console.error('Failed to load dashboard:', e);
+      }
+    }
+
+    async function loadProducts() {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/products?select=*,categories:product_categories(name)&order=created_at.desc`,
+          {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+          }
+        );
+        const products = await response.json();
+        
+        const tbody = document.getElementById('products-table');
+        if (!products || products.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Belum ada produk</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = products.map(p => `
+          <tr class="border-t">
+            <td class="px-4 py-2">${p.emoji || ''} ${p.name}</td>
+            <td class="px-4 py-2">${p.categories?.name || '-'}</td>
+            <td class="px-4 py-2">${formatCurrency(p.price)}</td>
+            <td class="px-4 py-2">
+              <span class="px-2 py-1 rounded text-sm ${p.is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                ${p.is_available ? 'Aktif' : 'Nonaktif'}
+              </span>
+            </td>
+            <td class="px-4 py-2">
+              <button class="text-feisty hover:underline mr-2">Edit</button>
+              <button class="text-red-500 hover:underline">Hapus</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load products:', e);
+      }
+    }
+
+    async function loadCategories() {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/product_categories?select=*&order=sort_order`,
+          {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+          }
+        );
+        const categories = await response.json();
+        
+        const container = document.getElementById('categories-list');
+        if (!categories || categories.length === 0) {
+          container.innerHTML = '<p class="text-gray-500">Belum ada kategori</p>';
+          return;
+        }
+
+        container.innerHTML = categories.map(c => `
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+            <div>
+              <div class="font-medium">${c.name}</div>
+              <div class="text-sm text-gray-500">${c.slug}</div>
+            </div>
+            <div class="space-x-2">
+              <button class="text-feisty hover:underline">Edit</button>
+              <button class="text-red-500 hover:underline">Hapus</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load categories:', e);
+      }
+    }
+
+    async function loadOutlets() {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/outlets?select=*&order=name`,
+          {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+          }
+        );
+        const outlets = await response.json();
+        
+        const container = document.getElementById('outlets-grid');
+        if (!outlets || outlets.length === 0) {
+          container.innerHTML = '<p class="text-gray-500 col-span-full">Belum ada outlet</p>';
+          return;
+        }
+
+        container.innerHTML = outlets.map(o => `
+          <div class="bg-white rounded-lg shadow p-4">
+            <div class="font-semibold mb-1">${o.name}</div>
+            <div class="text-sm text-gray-500 mb-2">${o.address}</div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-2 py-1 rounded text-xs ${o.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                ${o.is_active ? 'Aktif' : 'Nonaktif'}
+              </span>
+              <span class="px-2 py-1 rounded text-xs ${o.is_open ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">
+                ${o.is_open ? 'Buka' : 'Tutup'}
+              </span>
+            </div>
+            <button class="text-feisty text-sm hover:underline">Edit</button>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load outlets:', e);
+      }
+    }
+
+    async function loadUsers() {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/user_accounts?select=*,outlets(name)&order=created_at.desc`,
+          {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+          }
+        );
+        const users = await response.json();
+        
+        const tbody = document.getElementById('users-table');
+        if (!users || users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Belum ada user</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = users.map(u => `
+          <tr class="border-t">
+            <td class="px-4 py-2">${u.full_name || '-'}</td>
+            <td class="px-4 py-2">${u.email}</td>
+            <td class="px-4 py-2">
+              <span class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">${u.role}</span>
+            </td>
+            <td class="px-4 py-2">${u.outlets?.name || '-'}</td>
+            <td class="px-4 py-2">
+              <span class="px-2 py-1 rounded text-xs ${u.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                ${u.is_active ? 'Aktif' : 'Nonaktif'}
+              </span>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load users:', e);
+      }
+    }
+
+    // ============================================
+    // MODALS
+    // ============================================
+    function showProductModal() {
+      alert('Modal tambah produk - akan dikembangkan');
+    }
+
+    function showCategoryModal() {
+      alert('Modal tambah kategori - akan dikembangkan');
+    }
+
+    function showOutletModal() {
+      alert('Modal tambah outlet - akan dikembangkan');
+    }
+
+    function showUserModal() {
+      alert('Modal tambah user - akan dikembangkan');
+    }
+
+    // ============================================
+    // UTILITIES
+    // ============================================
+    function formatCurrency(amount) {
+      return 'Rp ' + Math.round(amount).toLocaleString('id-ID');
+    }
+  </script>
+</body>
+</html>

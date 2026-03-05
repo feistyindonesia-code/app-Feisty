@@ -1,88 +1,99 @@
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web Order - Feisty</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              feisty: '#fc7303',
-              'feisty-dark': '#e65a00',
-            }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order - Feisty</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            feisty: '#fc7303',
+            'feisty-dark': '#e65a00',
           }
         }
       }
-    </script>
-    <style>
-      :root {
-        --primary: #fc7303;
-        --primary-dark: #e65a00;
-      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50">
+  <!-- Location Section -->
+  <div id="location-section" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+      <span class="text-6xl">&#128205;</span>
+      <h1 class="text-2xl font-bold text-feisty mt-4">Cari Outlet Terdekat</h1>
+      <p class="text-gray-500 mt-2">Masukkan lokasi Anda untuk menemukan outlet Feisty terdekat</p>
       
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      }
-
-      .category-tab.active {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-      }
-
-      .add-to-cart-btn:hover {
-        background: var(--primary-dark);
-      }
-
-      .checkout-btn:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(252,115,3,0.4);
-      }
-    </style>
-  </head>
-  <body class="bg-gray-50 text-gray-800">
-    <!-- Header -->
-    <header class="bg-white shadow-md sticky top-0 z-50">
-      <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-          <span class="text-3xl">🔥</span>
-          <span class="text-2xl font-bold text-feisty">Feisty</span>
+      <form id="location-form" class="mt-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1 text-left">Latitude</label>
+          <input type="number" id="latitude" step="0.000001" required
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-feisty"
+            placeholder="-6.200000">
         </div>
-        <div class="text-sm text-gray-500" id="outlet-info">Memuat...</div>
+        <div>
+          <label class="block text-sm font-medium mb-1 text-left">Longitude</label>
+          <input type="number" id="longitude" step="0.000001" required
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-feisty"
+            placeholder="106.800000">
+        </div>
+        
+        <button type="button" onclick="getLocation()" 
+          class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
+          &#128241; Dapatkan Lokasi Otomatis
+        </button>
+        
+        <button type="submit" 
+          class="w-full bg-feisty text-white py-3 rounded-lg font-semibold hover:bg-feisty-dark">
+          Cari Outlet Terdekat
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Order Section (Hidden) -->
+  <div id="order-section" class="hidden">
+    <!-- Header with Outlet Info -->
+    <header class="bg-feisty text-white shadow-md sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">&#128293;</span>
+          <span class="font-bold">Feisty</span>
+        </div>
+        <div class="text-right text-sm">
+          <div id="outlet-name">-</div>
+          <div id="outlet-distance" class="opacity-80">-</div>
+        </div>
+        <button onclick="changeLocation()" class="text-sm underline">Ganti Lokasi</button>
       </div>
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Menu Section -->
+        <!-- Menu -->
         <div class="lg:col-span-2">
-          <!-- Category Tabs -->
-          <div class="flex gap-2 mb-6 overflow-x-auto pb-2" id="category-tabs">
+          <!-- Categories -->
+          <div class="flex gap-2 mb-6 overflow-x-auto" id="category-tabs">
             <button class="category-tab active px-4 py-2 border-2 rounded-lg whitespace-nowrap" data-category="all">
               Semua
             </button>
           </div>
 
-          <!-- Products Grid -->
+          <!-- Products -->
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="products-grid">
-            <div class="col-span-full text-center py-12 text-gray-500">
-              Memuat menu...
-            </div>
+            <p class="col-span-full text-center py-12 text-gray-500">Memuat menu...</p>
           </div>
         </div>
 
-        <!-- Cart Sidebar -->
+        <!-- Cart -->
         <div class="lg:col-span-1">
           <div class="bg-white rounded-xl shadow-lg p-5 sticky top-24">
-            <h2 class="text-xl font-bold mb-4">🛒 Keranjang</h2>
+            <h2 class="text-xl font-bold mb-4">&#128722; Keranjang</h2>
             
             <div class="cart-items max-h-64 overflow-y-auto mb-4" id="cart-items">
-              <div class="text-center py-8 text-gray-400">
-                Keranjang kosong
-              </div>
+              <p class="text-center py-8 text-gray-400">Keranjang kosong</p>
             </div>
 
             <div class="border-t pt-4 mb-4">
@@ -106,70 +117,37 @@
 
             <!-- Order Form -->
             <form id="order-form" class="space-y-3">
-              <input type="hidden" id="selected-products" value="[]" />
-              
               <div>
-                <label class="block text-sm font-medium mb-1">Nama Lengkap *</label>
+                <label class="block text-sm font-medium mb-1">Nama *</label>
                 <input type="text" id="customer-name" required
-                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty"
-                  placeholder="John Doe">
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty">
               </div>
-
               <div>
-                <label class="block text-sm font-medium mb-1">Nomor WhatsApp *</label>
+                <label class="block text-sm font-medium mb-1">WhatsApp *</label>
                 <input type="tel" id="customer-phone" required
-                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty"
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty"
                   placeholder="6281234567890">
               </div>
-
               <div>
-                <label class="block text-sm font-medium mb-1">Alamat Lengkap *</label>
+                <label class="block text-sm font-medium mb-1">Alamat *</label>
                 <textarea id="delivery-address" required rows="2"
-                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty"
-                  placeholder="Jl. Example No. 123, RT/RW"></textarea>
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty"></textarea>
               </div>
-
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-sm font-medium mb-1">Latitude *</label>
-                  <input type="number" id="delivery-latitude" step="0.000001" required
-                    class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty"
-                    placeholder="-6.2xxx">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium mb-1">Longitude *</label>
-                  <input type="number" id="delivery-longitude" step="0.000001" required
-                    class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty"
-                    placeholder="106.8xxx">
-                </div>
-              </div>
-
-              <div class="text-xs text-gray-500">
-                💡 Klik "Dapatkan Lokasi" untuk otomatis mengisi koordinat
-                <button type="button" onclick="getLocation()" class="ml-2 text-feisty hover:underline">
-                  Dapatkan Lokasi
-                </button>
-              </div>
-
               <div>
-                <label class="block text-sm font-medium mb-1">Catatan (Opsional)</label>
+                <label class="block text-sm font-medium mb-1">Catatan</label>
                 <input type="text" id="delivery-instructions"
-                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty"
-                  placeholder="Pintu belakang, naik lift, dll">
+                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty">
               </div>
-
               <div>
-                <label class="block text-sm font-medium mb-1">Metode Pembayaran</label>
-                <select id="payment-method"
-                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty focus:border-feisty">
-                  <option value="cash">Tunai (Cash on Delivery)</option>
+                <label class="block text-sm font-medium mb-1">Pembayaran</label>
+                <select id="payment-method" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-feisty">
+                  <option value="cash">Tunai (COD)</option>
                   <option value="qris">QRIS</option>
-                  <option value="transfer">Transfer Bank</option>
+                  <option value="transfer">Transfer</option>
                 </select>
               </div>
-
               <button type="submit" 
-                class="w-full checkout-btn bg-feisty text-white py-3 rounded-lg font-semibold transition">
+                class="w-full bg-feisty text-white py-3 rounded-lg font-semibold hover:bg-feisty-dark">
                 Pesan Sekarang
               </button>
             </form>
@@ -177,330 +155,373 @@
         </div>
       </div>
     </main>
+  </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
-      Pesan ditambahkan
-    </div>
+  <script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const SUPABASE_URL = "https://your-project.supabase.co";
+    const SUPABASE_ANON_KEY = "your-anon-key";
 
-    <script>
-      // ============================================
-      // CONFIGURATION - Update these values!
-      // ============================================
-      const SUPABASE_URL = "https://your-project.supabase.co";
-      const SUPABASE_ANON_KEY = "your-anon-key";
+    // ============================================
+    // STATE
+    // ============================================
+    let currentOutlet = null;
+    let products = [];
+    let categories = [];
+    let cart = [];
+    let deliveryFee = 0;
+
+    // ============================================
+    // GEOLOCATION
+    // ============================================
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            document.getElementById('latitude').value = position.coords.latitude.toFixed(6);
+            document.getElementById('longitude').value = position.coords.longitude.toFixed(6);
+          },
+          (error) => {
+            alert('Gagal mendapatkan lokasi: ' + error.message);
+          }
+        );
+      } else {
+        alert('Geolocation tidak didukung');
+      }
+    }
+
+    // ============================================
+    // LOCATION SUBMISSION
+    // ============================================
+    document.getElementById('location-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
       
-      // Edge function URL for creating orders
-      const WEBORDER_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/weborder`;
+      const latitude = parseFloat(document.getElementById('latitude').value);
+      const longitude = parseFloat(document.getElementById('longitude').value);
 
-      // State
-      let products = [];
-      let cart = [];
-      let categories = [];
-      let deliveryFee = 0;
-      let outletName = "Feisty Outlet";
+      await findNearestOutlet(latitude, longitude);
+    });
 
-      // ============================================
-      // Initialize
-      // ============================================
-      async function init() {
-        await loadOutletInfo();
-        await loadCategories();
-        await loadProducts();
-      }
+    function changeLocation() {
+      document.getElementById('order-section').classList.add('hidden');
+      document.getElementById('location-section').classList.remove('hidden');
+    }
 
-      // ============================================
-      // Data Loading Functions
-      // ============================================
-      async function loadOutletInfo() {
-        try {
-          const res = await fetch(`${SUPABASE_URL}/rest/v1/outlets?select=name,address&limit=1`, {
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            }
-          });
-          const data = await res.json();
-          if (data && data.length > 0) {
-            outletName = data[0].name;
-            document.getElementById('outlet-info').textContent = `📍 ${outletName}`;
-          }
-        } catch (e) {
-          console.error('Failed to load outlet info:', e);
-        }
-      }
-
-      async function loadCategories() {
-        try {
-          const res = await fetch(`${SUPABASE_URL}/rest/v1/product_categories?select=id,name&order=sort_order`, {
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            }
-          });
-          categories = await res.json();
-          renderCategories();
-        } catch (e) {
-          console.error('Failed to load categories:', e);
-        }
-      }
-
-      async function loadProducts() {
-        try {
-          const res = await fetch(
-            `${SUPABASE_URL}/rest/v1/products?select=id,name,price,description,emoji,category_id,is_available&is_available=eq.true&order=name`,
-            {
-              headers: {
-                apikey: SUPABASE_ANON_KEY,
-                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-              },
-            }
-          );
-          products = await res.json();
-          renderProducts();
-        } catch (e) {
-          console.error('Failed to load products:', e);
-          document.getElementById('products-grid').innerHTML = 
-            '<div class="col-span-full text-center py-12 text-red-500">Gagal memuat menu</div>';
-        }
-      }
-
-      // ============================================
-      // Render Functions
-      // ============================================
-      function renderCategories() {
-        const container = document.getElementById('category-tabs');
-        let html = `<button class="category-tab active px-4 py-2 border-2 rounded-lg whitespace-nowrap" data-category="all">Semua</button>`;
-        
-        categories.forEach(cat => {
-          html += `<button class="category-tab px-4 py-2 border-2 rounded-lg whitespace-nowrap" data-category="${cat.id}">${cat.name}</button>`;
-        });
-        
-        container.innerHTML = html;
-        
-        // Add click handlers
-        container.querySelectorAll('.category-tab').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            container.querySelectorAll('.category-tab').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            renderProducts(e.target.dataset.category);
-          });
-        });
-      }
-
-      function renderProducts(categoryId = 'all') {
-        const container = document.getElementById('products-grid');
-        
-        const filtered = categoryId === 'all' 
-          ? products 
-          : products.filter(p => p.category_id === categoryId);
-        
-        if (filtered.length === 0) {
-          container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">Tidak ada produk</div>';
-          return;
-        }
-
-        container.innerHTML = filtered.map(p => `
-          <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition cursor-pointer"
-               onclick="addToCart('${p.id}')">
-            <div class="h-32 bg-gradient-to-br from-feisty to-feisty-dark flex items-center justify-center text-5xl">
-              ${p.emoji || '🍽️'}
-            </div>
-            <div class="p-3">
-              <div class="font-semibold text-sm mb-1">${p.name}</div>
-              <div class="text-feisty font-bold">${formatCurrency(p.price)}</div>
-              ${p.description ? `<div class="text-xs text-gray-500 mt-1 line-clamp-2">${p.description}</div>` : ''}
-            </div>
-          </div>
-        `).join('');
-      }
-
-      // ============================================
-      // Cart Functions
-      // ============================================
-      function addToCart(productId) {
-        const product = products.find(p => p.id === productId);
-        if (!product) return;
-
-        const existing = cart.find(item => item.product_id === productId);
-        if (existing) {
-          existing.quantity++;
-        } else {
-          cart.push({
-            product_id: product.id,
-            name: product.name,
-            price: product.price,
-            emoji: product.emoji,
-            quantity: 1
-          });
-        }
-
-        updateCart();
-        showToast(`${product.name} ditambahkan ke keranjang`);
-      }
-
-      function removeFromCart(productId) {
-        cart = cart.filter(item => item.product_id !== productId);
-        updateCart();
-      }
-
-      function updateQuantity(productId, change) {
-        const item = cart.find(i => i.product_id === productId);
-        if (item) {
-          item.quantity += change;
-          if (item.quantity <= 0) {
-            removeFromCart(productId);
-          } else {
-            updateCart();
-          }
-        }
-      }
-
-      function updateCart() {
-        const container = document.getElementById('cart-items');
-        
-        if (cart.length === 0) {
-          container.innerHTML = '<div class="text-center py-8 text-gray-400">Keranjang kosong</div>';
-          document.getElementById('cart-subtotal').textContent = 'Rp 0';
-          document.getElementById('cart-delivery-fee').textContent = 'Rp 0';
-          document.getElementById('cart-tax').textContent = 'Rp 0';
-          document.getElementById('cart-total').textContent = 'Rp 0';
-          return;
-        }
-
-        container.innerHTML = cart.map(item => `
-          <div class="flex items-center justify-between py-3 border-b">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">${item.emoji || '🍽️'}</span>
-              <div>
-                <div class="font-medium text-sm">${item.name}</div>
-                <div class="text-xs text-gray-500">${formatCurrency(item.price)}</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="updateQuantity('${item.product_id}', -1)" 
-                class="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center">-</button>
-              <span class="font-medium w-6 text-center">${item.quantity}</span>
-              <button onclick="updateQuantity('${item.product_id}', 1)"
-                class="w-6 h-6 rounded bg-feisty text-white hover:bg-feisty-dark flex items-center justify-center">+</button>
-            </div>
-          </div>
-        `).join('');
-
-        // Calculate totals
-        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const tax = Math.round(subtotal * 0.1);
-        const total = subtotal + deliveryFee + tax;
-
-        document.getElementById('cart-subtotal').textContent = formatCurrency(subtotal);
-        document.getElementById('cart-delivery-fee').textContent = formatCurrency(deliveryFee);
-        document.getElementById('cart-tax').textContent = formatCurrency(tax);
-        document.getElementById('cart-total').textContent = formatCurrency(total);
-      }
-
-      // ============================================
-      // Order Submission
-      // ============================================
-      document.getElementById('order-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        if (cart.length === 0) {
-          alert('Keranjang kosong! Silakan pilih produk terlebih dahulu.');
-          return;
-        }
-
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Memproses...';
-        submitBtn.disabled = true;
-
-        try {
-          // Prepare order data
-          const orderData = {
-            items: cart.map(item => ({
-              product_id: item.product_id,
-              quantity: item.quantity,
-              notes: null
-            })),
-            customer_name: document.getElementById('customer-name').value,
-            customer_phone: document.getElementById('customer-phone').value,
-            delivery_address: document.getElementById('delivery-address').value,
-            delivery_latitude: parseFloat(document.getElementById('delivery-latitude').value),
-            delivery_longitude: parseFloat(document.getElementById('delivery-longitude').value),
-            delivery_instructions: document.getElementById('delivery-instructions').value || null,
-            payment_method: document.getElementById('payment-method').value,
-          };
-
-          // Call weborder edge function
-          const response = await fetch(WEBORDER_FUNCTION_URL, {
+    // ============================================
+    // FIND NEAREST OUTLET
+    // ============================================
+    async function findNearestOutlet(latitude, longitude) {
+      try {
+        // Call the function to find nearest outlet
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/rpc/find_nearest_outlet`,
+          {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON_KEY,
               'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
             },
-            body: JSON.stringify(orderData)
-          });
-
-          const result = await response.json();
-
-          if (response.ok && result.success) {
-            const order = result.data;
-            alert(`✅ Pesanan berhasil!\n\nNomor Pesanan: ${order.order_number}\nTotal: ${formatCurrency(order.total)}\n\nKami akan menghubungi Anda melalui WhatsApp untuk konfirmasi.`);
-            
-            // Reset form
-            cart = [];
-            updateCart();
-            document.getElementById('order-form').reset();
-          } else {
-            alert('Gagal membuat pesanan: ' + (result.error?.message || 'Unknown error'));
+            body: JSON.stringify({
+              p_latitude: latitude,
+              p_longitude: longitude
+            })
           }
-        } catch (error) {
-          console.error('Order error:', error);
-          alert('Terjadi kesalahan. Silakan coba lagi.');
-        } finally {
-          submitBtn.textContent = originalText;
-          submitBtn.disabled = false;
-        }
-      });
+        );
 
-      // ============================================
-      // Geolocation
-      // ============================================
-      function getLocation() {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              document.getElementById('delivery-latitude').value = position.coords.latitude.toFixed(6);
-              document.getElementById('delivery-longitude').value = position.coords.longitude.toFixed(6);
-              showToast('Koordinat berhasil diisi');
-            },
-            (error) => {
-              alert('Gagal mendapatkan lokasi: ' + error.message);
-            }
-          );
+        const result = await response.json();
+
+        if (result && result.length > 0) {
+          currentOutlet = result[0];
+          deliveryFee = currentOutlet.delivery_fee || 0;
+          
+          // Update UI
+          document.getElementById('outlet-name').textContent = currentOutlet.outlet_name;
+          document.getElementById('outlet-distance').textContent = `${currentOutlet.distance} km`;
+          
+          // Show order section
+          document.getElementById('location-section').classList.add('hidden');
+          document.getElementById('order-section').classList.remove('hidden');
+          
+          // Load products for this outlet
+          loadProducts();
         } else {
-          alert('Geolocation tidak didukung browser ini');
+          alert('Tidak ada outlet terdekat yang tersedia. Coba lokasi lain.');
         }
+      } catch (e) {
+        console.error('Error finding outlet:', e);
+        // Fallback: use first active outlet
+        await loadFallbackOutlet();
+      }
+    }
+
+    async function loadFallbackOutlet() {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/outlets?select=*&is_active=eq.true&is_open=eq.true&limit=1`,
+          {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+          }
+        );
+        const outlets = await response.json();
+        
+        if (outlets && outlets.length > 0) {
+          currentOutlet = {
+            outlet_id: outlets[0].id,
+            outlet_name: outlets[0].name,
+            delivery_fee: outlets[0].delivery_fee || 0
+          };
+          deliveryFee = currentOutlet.delivery_fee;
+          
+          document.getElementById('outlet-name').textContent = currentOutlet.outlet_name;
+          document.getElementById('outlet-distance').textContent = '-';
+          
+          document.getElementById('location-section').classList.add('hidden');
+          document.getElementById('order-section').classList.remove('hidden');
+          
+          loadProducts();
+        } else {
+          alert('Tidak ada outlet yang tersedia.');
+        }
+      } catch (e) {
+        console.error('Error loading fallback:', e);
+        alert('Gagal memuat outlet. Silakan coba lagi.');
+      }
+    }
+
+    // ============================================
+    // DATA LOADING
+    // ============================================
+    async function loadProducts() {
+      if (!currentOutlet) return;
+
+      try {
+        // Load products - global + outlet-specific
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/products?select=*&is_available=eq.true&order=name`,
+          {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+          }
+        );
+        const allProducts = await response.json();
+        
+        // Filter: global OR this outlet
+        products = allProducts.filter(p => p.is_global || p.outlet_id === currentOutlet.outlet_id);
+        
+        // Load categories
+        const catResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/product_categories?select=*&is_active=eq.true&order=sort_order`,
+          {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+          }
+        );
+        categories = await catResponse.json();
+        
+        renderCategories();
+        renderProducts();
+      } catch (e) {
+        console.error('Failed to load products:', e);
+      }
+    }
+
+    function renderCategories() {
+      const container = document.getElementById('category-tabs');
+      let html = `<button class="category-tab active px-4 py-2 border-2 rounded-lg whitespace-nowrap" data-category="all">Semua</button>`;
+      
+      categories.forEach(cat => {
+        html += `<button class="category-tab px-4 py-2 border-2 rounded-lg whitespace-nowrap" data-category="${cat.id}">${cat.name}</button>`;
+      });
+      
+      container.innerHTML = html;
+      
+      container.querySelectorAll('.category-tab').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          container.querySelectorAll('.category-tab').forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+          renderProducts(e.target.dataset.category);
+        });
+      });
+    }
+
+    function renderProducts(categoryId = 'all') {
+      const container = document.getElementById('products-grid');
+      
+      const filtered = categoryId === 'all' 
+        ? products 
+        : products.filter(p => p.category_id === categoryId);
+      
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="col-span-full text-center py-12 text-gray-500">Tidak ada produk</p>';
+        return;
       }
 
-      // ============================================
-      // Utilities
-      // ============================================
-      function formatCurrency(amount) {
-        return 'Rp ' + Math.round(amount).toLocaleString('id-ID');
+      container.innerHTML = filtered.map(p => `
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition cursor-pointer"
+             onclick="addToCart('${p.id}')">
+          <div class="h-28 bg-gradient-to-br from-feisty to-feisty-dark flex items-center justify-center text-4xl">
+            ${p.emoji || '&#127869;'}
+          </div>
+          <div class="p-3">
+            <div class="font-semibold text-sm mb-1">${p.name}</div>
+            <div class="text-feisty font-bold">${formatCurrency(p.price)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================
+    // CART
+    // ============================================
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+
+      const existing = cart.find(item => item.product_id === productId);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        cart.push({
+          product_id: product.id,
+          name: product.name,
+          price: product.price,
+          emoji: product.emoji,
+          quantity: 1
+        });
       }
 
-      function showToast(message) {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.classList.remove('translate-y-20', 'opacity-0');
-        setTimeout(() => {
-          toast.classList.add('translate-y-20', 'opacity-0');
-        }, 2000);
+      updateCart();
+      showToast(`${product.name} ditambahkan`);
+    }
+
+    function updateQuantity(productId, change) {
+      const item = cart.find(i => i.product_id === productId);
+      if (item) {
+        item.quantity += change;
+        if (item.quantity <= 0) {
+          cart = cart.filter(i => i.product_id !== productId);
+        }
+        updateCart();
+      }
+    }
+
+    function updateCart() {
+      const container = document.getElementById('cart-items');
+      
+      if (cart.length === 0) {
+        container.innerHTML = '<p class="text-center py-8 text-gray-400">Keranjang kosong</p>';
+        document.getElementById('cart-subtotal').textContent = 'Rp 0';
+        document.getElementById('cart-delivery-fee').textContent = 'Rp 0';
+        document.getElementById('cart-tax').textContent = 'Rp 0';
+        document.getElementById('cart-total').textContent = 'Rp 0';
+        return;
       }
 
-      // Initialize on load
-      init();
-    </script>
-  </body>
+      container.innerHTML = cart.map(item => `
+        <div class="flex justify-between items-center py-2 border-b">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">${item.emoji || '&#127869;'}</span>
+            <div>
+              <div class="text-sm font-medium">${item.name}</div>
+              <div class="text-xs text-gray-500">${formatCurrency(item.price)}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="updateQuantity('${item.product_id}', -1)" 
+              class="w-6 h-6 rounded bg-gray-200 flex items-center justify-center">-</button>
+            <span class="w-6 text-center text-sm">${item.quantity}</span>
+            <button onclick="updateQuantity('${item.product_id}', 1)"
+              class="w-6 h-6 rounded bg-feisty text-white flex items-center justify-center">+</button>
+          </div>
+        </div>
+      `).join('');
+
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const tax = Math.round(subtotal * 0.1);
+      const total = subtotal + deliveryFee + tax;
+
+      document.getElementById('cart-subtotal').textContent = formatCurrency(subtotal);
+      document.getElementById('cart-delivery-fee').textContent = formatCurrency(deliveryFee);
+      document.getElementById('cart-tax').textContent = formatCurrency(tax);
+      document.getElementById('cart-total').textContent = formatCurrency(total);
+    }
+
+    // ============================================
+    // ORDER SUBMISSION
+    // ============================================
+    document.getElementById('order-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (cart.length === 0) {
+        alert('Keranjang kosong!');
+        return;
+      }
+
+      const orderData = {
+        items: cart.map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          notes: null
+        })),
+        customer_name: document.getElementById('customer-name').value,
+        customer_phone: document.getElementById('customer-phone').value,
+        delivery_address: document.getElementById('delivery-address').value,
+        delivery_latitude: 0,
+        delivery_longitude: 0,
+        delivery_instructions: document.getElementById('delivery-instructions').value || null,
+        payment_method: document.getElementById('payment-method').value,
+        outlet_id: currentOutlet.outlet_id
+      };
+
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/weborder`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify(orderData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          const order = result.data;
+          alert(`&#9989; Pesanan berhasil!\n\nNomor: ${order.order_number}\nTotal: ${formatCurrency(order.total)}\n\nKami akan menghubungi via WhatsApp!`);
+          
+          cart = [];
+          updateCart();
+          document.getElementById('order-form').reset();
+        } else {
+          alert('Gagal: ' + (result.error?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Order error:', error);
+        alert('Terjadi kesalahan. Coba lagi.');
+      }
+    });
+
+    // ============================================
+    // UTILITIES
+    // ============================================
+    function formatCurrency(amount) {
+      return 'Rp ' + Math.round(amount).toLocaleString('id-ID');
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      if (!toast) {
+        const div = document.createElement('div');
+        div.id = 'toast';
+        div.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg';
+        document.body.appendChild(div);
+      }
+      const t = document.getElementById('toast');
+      t.textContent = message;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 2000);
+    }
+  </script>
+</body>
 </html>
