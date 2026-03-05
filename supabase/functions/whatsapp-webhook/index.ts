@@ -395,13 +395,13 @@ serve(async (req: Request) => {
 
     // Send response via Whacenter
     const whacenterDeviceId = Deno.env.get("WHACENTER_DEVICE_ID") || "";
-    console.log("WHACENTER_DEVICE_ID configured:", !!whacenterDeviceId);
+    console.log("WHACENTER_DEVICE_ID configured:", !!whacenterDeviceId, "value:", whacenterDeviceId);
     
-    if (whacenterDeviceId && deviceId) {
+    if (whacenterDeviceId && whacenterDeviceId !== "true") {
       const result = await sendWhacenterMessage(whacenterDeviceId, normalizedFrom, responseText);
       console.log("Whacenter send result:", JSON.stringify(result));
     } else {
-      console.log("Whacenter not configured or no device, skipping send");
+      console.log("Whacenter not configured properly, skipping send. Need valid device_id in WHACENTER_DEVICE_ID env var.");
     }
 
     return new Response(
