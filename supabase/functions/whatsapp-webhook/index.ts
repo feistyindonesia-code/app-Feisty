@@ -16,6 +16,8 @@ async function callGemini(prompt: string): Promise<string> {
     return "Maaf, AI belum dikonfigurasi. Coba hubungi admin!";
   }
 
+  console.log("Gemini request prompt:", prompt);
+
   const systemPrompt = `Kamu adalah AI assistant untuk Feisty Go International - bisnis food & beverage.
 
 Tugas kamu:
@@ -64,24 +66,26 @@ Jawab dengan singkat, max 2 kalimat, kecuali jika customer meminta detail.`;
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Gemini API error:", JSON.stringify(errorData));
-      return "Maaf, ada masalah dengan AI. Coba lagi ya!";
+      return "Maaf, AI sedang mengalami gangguan. Silakan coba lagi nanti 🙏";
     }
 
     const data = await response.json();
     console.log("Gemini response data:", JSON.stringify(data).slice(0, 500));
     
-    if (data.candidates && 
-        data.candidates[0]?.content?.parts && 
-        data.candidates[0].content.parts.length > 0 &&
-        data.candidates[0].content.parts[0]?.text) {
+    if (
+      data.candidates &&
+      data.candidates[0]?.content?.parts &&
+      data.candidates[0].content.parts.length > 0 &&
+      data.candidates[0].content.parts[0]?.text
+    ) {
       return data.candidates[0].content.parts[0].text;
     }
     
     console.error("Gemini response format unexpected:", data);
-    return "Maaf, ada masalah dengan AI. Coba lagi ya!";
+    return "Maaf, AI sedang mengalami gangguan. Silakan coba lagi nanti 🙏";
   } catch (e) {
     console.error("Gemini error:", e);
-    return "Maaf, AI sedang sibuk. Coba lagi nanti!";
+    return "Maaf, AI sedang mengalami gangguan. Silakan coba lagi nanti 🙏";
   }
 }
 
