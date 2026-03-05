@@ -11,8 +11,8 @@
 // 4. Copy "Project URL" to SUPABASE_URL below
 // 5. Copy "anon public" key to SUPABASE_ANON_KEY below
 
-const SUPABASE_URL = "https://your-project.supabase.co";
-const SUPABASE_ANON_KEY = "your-anon-key";
+const SUPABASE_URL = "https://cvjpgicqruzolwtpiksa.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE";
 
 // ============================================
 // Derived URLs (no need to change)
