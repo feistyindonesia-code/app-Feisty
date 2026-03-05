@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS whatsapp_devices (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_whatsapp_devices_organization_id ON whatsapp_devices(organization_id);
-CREATE INDEX idx_whatsapp_devices_outlet_id ON whatsapp_devices(outlet_id);
-CREATE INDEX idx_whatsapp_devices_device_id ON whatsapp_devices(device_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_devices_organization_id ON whatsapp_devices(organization_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_devices_outlet_id ON whatsapp_devices(outlet_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_devices_device_id ON whatsapp_devices(device_id);
 
 -- WhatsApp Messages Log
 CREATE TABLE IF NOT EXISTS whatsapp_messages (
@@ -34,10 +34,10 @@ CREATE TABLE IF NOT EXISTS whatsapp_messages (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_whatsapp_messages_device_id ON whatsapp_messages(device_id);
-CREATE INDEX idx_whatsapp_messages_phone_number ON whatsapp_messages(phone_number);
-CREATE INDEX idx_whatsapp_messages_created_at ON whatsapp_messages(created_at);
-CREATE INDEX idx_whatsapp_messages_processed ON whatsapp_messages(is_processed);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_device_id ON whatsapp_messages(device_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_phone_number ON whatsapp_messages(phone_number);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_created_at ON whatsapp_messages(created_at);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_processed ON whatsapp_messages(is_processed);
 
 -- WhatsApp Conversations
 CREATE TABLE IF NOT EXISTS whatsapp_conversations (
@@ -55,9 +55,9 @@ CREATE TABLE IF NOT EXISTS whatsapp_conversations (
   UNIQUE(device_id, phone_number)
 );
 
-CREATE INDEX idx_whatsapp_conversations_device_id ON whatsapp_conversations(device_id);
-CREATE INDEX idx_whatsapp_conversations_phone_number ON whatsapp_conversations(phone_number);
-CREATE INDEX idx_whatsapp_conversations_customer_id ON whatsapp_conversations(customer_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_conversations_device_id ON whatsapp_conversations(device_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_conversations_phone_number ON whatsapp_conversations(phone_number);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_conversations_customer_id ON whatsapp_conversations(customer_id);
 
 -- Webhook signatures for validation
 CREATE TABLE IF NOT EXISTS webhook_signatures (
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS webhook_signatures (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_webhook_signatures_organization_id ON webhook_signatures(organization_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_signatures_organization_id ON webhook_signatures(organization_id);
 
 -- Enable RLS
 ALTER TABLE whatsapp_devices ENABLE ROW LEVEL SECURITY;
@@ -77,6 +77,7 @@ ALTER TABLE whatsapp_conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE webhook_signatures ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "whatsapp_devices_view" ON whatsapp_devices;
 CREATE POLICY "whatsapp_devices_view" ON whatsapp_devices
   FOR SELECT USING (
     organization_id IN (
@@ -84,6 +85,7 @@ CREATE POLICY "whatsapp_devices_view" ON whatsapp_devices
     )
   );
 
+DROP POLICY IF EXISTS "whatsapp_messages_view" ON whatsapp_messages;
 CREATE POLICY "whatsapp_messages_view" ON whatsapp_messages
   FOR SELECT USING (
     organization_id IN (
@@ -91,6 +93,7 @@ CREATE POLICY "whatsapp_messages_view" ON whatsapp_messages
     )
   );
 
+DROP POLICY IF EXISTS "whatsapp_conversations_view" ON whatsapp_conversations;
 CREATE POLICY "whatsapp_conversations_view" ON whatsapp_conversations
   FOR SELECT USING (
     organization_id IN (
@@ -126,8 +129,8 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 -- Trigger for updates
-CREATE TRIGGER update_whatsapp_devices_updated_at BEFORE UPDATE ON whatsapp_devices
+CREATE OR REPLACE TRIGGER update_whatsapp_devices_updated_at BEFORE UPDATE ON whatsapp_devices
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_whatsapp_conversations_updated_at BEFORE UPDATE ON whatsapp_conversations
+CREATE OR REPLACE TRIGGER update_whatsapp_conversations_updated_at BEFORE UPDATE ON whatsapp_conversations
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

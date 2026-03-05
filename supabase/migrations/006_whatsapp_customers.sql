@@ -1,4 +1,4 @@
-  -- WhatsApp Customer Tracking for Referral System
+-- WhatsApp Customer Tracking for Referral System
 
 -- Table untuk menyimpan data customer dari WhatsApp
 CREATE TABLE IF NOT EXISTS whatsapp_customers (
@@ -18,14 +18,15 @@ CREATE TABLE IF NOT EXISTS whatsapp_customers (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_whatsapp_customers_phone ON whatsapp_customers(phone_number);
-CREATE INDEX idx_whatsapp_customers_referral_code ON whatsapp_customers(my_referral_code);
-CREATE INDEX idx_whatsapp_customers_referrer_id ON whatsapp_customers(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_customers_phone ON whatsapp_customers(phone_number);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_customers_referral_code ON whatsapp_customers(my_referral_code);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_customers_referrer_id ON whatsapp_customers(referrer_id);
 
 -- Enable RLS
 ALTER TABLE whatsapp_customers ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policy - allow service role to manage
+DROP POLICY IF EXISTS "whatsapp_customers_service" ON whatsapp_customers;
 CREATE POLICY "whatsapp_customers_service" ON whatsapp_customers
   FOR ALL USING (true);
 
@@ -54,6 +55,7 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 -- Trigger untuk generate referral code
+DROP TRIGGER IF EXISTS generate_customer_referral_code ON whatsapp_customers;
 CREATE TRIGGER generate_customer_referral_code 
   BEFORE INSERT ON whatsapp_customers
   FOR EACH ROW
@@ -61,6 +63,7 @@ CREATE TRIGGER generate_customer_referral_code
   EXECUTE FUNCTION generate_referral_code();
 
 -- Update updated_at trigger
+DROP TRIGGER IF EXISTS update_whatsapp_customers_updated_at ON whatsapp_customers;
 CREATE TRIGGER update_whatsapp_customers_updated_at 
   BEFORE UPDATE ON whatsapp_customers
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

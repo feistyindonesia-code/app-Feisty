@@ -1,7 +1,7 @@
 -- Delivery Coverage Areas using PostGIS Polygons
 
 -- Create delivery zones table
-CREATE TABLE delivery_zones (
+CREATE TABLE IF NOT EXISTS delivery_zones (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   outlet_id UUID NOT NULL REFERENCES outlets(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
@@ -14,13 +14,14 @@ CREATE TABLE delivery_zones (
 );
 
 -- Create spatial index for faster queries
-CREATE INDEX idx_delivery_zones_polygon ON delivery_zones USING GIST (polygon);
-CREATE INDEX idx_delivery_zones_outlet_id ON delivery_zones(outlet_id);
+CREATE INDEX IF NOT EXISTS idx_delivery_zones_polygon ON delivery_zones USING GIST (polygon);
+CREATE INDEX IF NOT EXISTS idx_delivery_zones_outlet_id ON delivery_zones(outlet_id);
 
 -- Enable RLS
 ALTER TABLE delivery_zones ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policy: Users can view delivery zones for their organization
+DROP POLICY IF EXISTS "delivery_zones_view" ON delivery_zones;
 CREATE POLICY "delivery_zones_view" ON delivery_zones
   FOR SELECT USING (
     outlet_id IN (
@@ -91,5 +92,5 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 -- Update trigger for delivery zones
-CREATE TRIGGER update_delivery_zones_updated_at BEFORE UPDATE ON delivery_zones
+CREATE OR REPLACE TRIGGER update_delivery_zones_updated_at BEFORE UPDATE ON delivery_zones
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

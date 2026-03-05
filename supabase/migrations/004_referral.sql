@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS referral_campaigns (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_referral_campaigns_organization_id ON referral_campaigns(organization_id);
-CREATE INDEX idx_referral_campaigns_active ON referral_campaigns(is_active);
+CREATE INDEX IF NOT EXISTS idx_referral_campaigns_organization_id ON referral_campaigns(organization_id);
+CREATE INDEX IF NOT EXISTS idx_referral_campaigns_active ON referral_campaigns(is_active);
 
 -- Referral Codes
 CREATE TABLE IF NOT EXISTS referral_codes (
@@ -34,10 +34,10 @@ CREATE TABLE IF NOT EXISTS referral_codes (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_referral_codes_campaign_id ON referral_codes(campaign_id);
-CREATE INDEX idx_referral_codes_referrer_id ON referral_codes(referrer_id);
-CREATE INDEX idx_referral_codes_code ON referral_codes(code);
-CREATE INDEX idx_referral_codes_active ON referral_codes(is_active);
+CREATE INDEX IF NOT EXISTS idx_referral_codes_campaign_id ON referral_codes(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_referral_codes_referrer_id ON referral_codes(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_referral_codes_code ON referral_codes(code);
+CREATE INDEX IF NOT EXISTS idx_referral_codes_active ON referral_codes(is_active);
 
 -- Referral Redemptions
 CREATE TABLE IF NOT EXISTS referral_redemptions (
@@ -55,11 +55,11 @@ CREATE TABLE IF NOT EXISTS referral_redemptions (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_referral_redemptions_code_id ON referral_redemptions(code_id);
-CREATE INDEX idx_referral_redemptions_referrer_id ON referral_redemptions(referrer_id);
-CREATE INDEX idx_referral_redemptions_referee_id ON referral_redemptions(referee_id);
-CREATE INDEX idx_referral_redemptions_order_id ON referral_redemptions(order_id);
-CREATE INDEX idx_referral_redemptions_created_at ON referral_redemptions(created_at);
+CREATE INDEX IF NOT EXISTS idx_referral_redemptions_code_id ON referral_redemptions(code_id);
+CREATE INDEX IF NOT EXISTS idx_referral_redemptions_referrer_id ON referral_redemptions(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_referral_redemptions_referee_id ON referral_redemptions(referee_id);
+CREATE INDEX IF NOT EXISTS idx_referral_redemptions_order_id ON referral_redemptions(order_id);
+CREATE INDEX IF NOT EXISTS idx_referral_redemptions_created_at ON referral_redemptions(created_at);
 
 -- Referral Rewards (Credits)
 CREATE TABLE IF NOT EXISTS referral_rewards (
@@ -77,9 +77,9 @@ CREATE TABLE IF NOT EXISTS referral_rewards (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_referral_rewards_user_id ON referral_rewards(user_id);
-CREATE INDEX idx_referral_rewards_organization_id ON referral_rewards(organization_id);
-CREATE INDEX idx_referral_rewards_created_at ON referral_rewards(created_at);
+CREATE INDEX IF NOT EXISTS idx_referral_rewards_user_id ON referral_rewards(user_id);
+CREATE INDEX IF NOT EXISTS idx_referral_rewards_organization_id ON referral_rewards(organization_id);
+CREATE INDEX IF NOT EXISTS idx_referral_rewards_created_at ON referral_rewards(created_at);
 
 -- Enable RLS
 ALTER TABLE referral_campaigns ENABLE ROW LEVEL SECURITY;
@@ -88,6 +88,7 @@ ALTER TABLE referral_redemptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE referral_rewards ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "referral_campaigns_view" ON referral_campaigns;
 CREATE POLICY "referral_campaigns_view" ON referral_campaigns
   FOR SELECT USING (
     organization_id IN (
@@ -95,6 +96,7 @@ CREATE POLICY "referral_campaigns_view" ON referral_campaigns
     )
   );
 
+DROP POLICY IF EXISTS "referral_codes_view" ON referral_codes;
 CREATE POLICY "referral_codes_view" ON referral_codes
   FOR SELECT USING (
     organization_id IN (
@@ -103,6 +105,7 @@ CREATE POLICY "referral_codes_view" ON referral_codes
     OR referrer_id = auth.uid()
   );
 
+DROP POLICY IF EXISTS "referral_redemptions_view" ON referral_redemptions;
 CREATE POLICY "referral_redemptions_view" ON referral_redemptions
   FOR SELECT USING (
     referrer_id = auth.uid()
@@ -115,6 +118,7 @@ CREATE POLICY "referral_redemptions_view" ON referral_redemptions
     )
   );
 
+DROP POLICY IF EXISTS "referral_rewards_view" ON referral_rewards;
 CREATE POLICY "referral_rewards_view" ON referral_rewards
   FOR SELECT USING (
     user_id = auth.uid()
@@ -177,14 +181,14 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 -- Triggers
-CREATE TRIGGER update_referral_campaigns_updated_at BEFORE UPDATE ON referral_campaigns
+CREATE OR REPLACE TRIGGER update_referral_campaigns_updated_at BEFORE UPDATE ON referral_campaigns
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_referral_codes_updated_at BEFORE UPDATE ON referral_codes
+CREATE OR REPLACE TRIGGER update_referral_codes_updated_at BEFORE UPDATE ON referral_codes
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_referral_redemptions_updated_at BEFORE UPDATE ON referral_redemptions
+CREATE OR REPLACE TRIGGER update_referral_redemptions_updated_at BEFORE UPDATE ON referral_redemptions
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_referral_rewards_updated_at BEFORE UPDATE ON referral_rewards
+CREATE OR REPLACE TRIGGER update_referral_rewards_updated_at BEFORE UPDATE ON referral_rewards
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
