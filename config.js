@@ -12,7 +12,7 @@
 // 5. Copy "anon public" key to SUPABASE_ANON_KEY
 
 const SUPABASE_URL = "https://cvjpgicqruzolwtpiksa.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2anBnaWNxcnV6b2x3dHBpa3NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzMzk5ODgsImV4cCI6MjA4NzkxNTk4OH0.sfWuGHiSSN422Smqy6mgRxuq-3FdPns0lWFsE_zqgwM";
 
 // Derived URLs
 const AUTH_FUNCTION_URL = SUPABASE_URL + "/functions/v1/auth";
