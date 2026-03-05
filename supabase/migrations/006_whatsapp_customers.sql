@@ -1,7 +1,7 @@
   -- WhatsApp Customer Tracking for Referral System
 
 -- Table untuk menyimpan data customer dari WhatsApp
-CREATE TABLE whatsapp_customers (
+CREATE TABLE IF NOT EXISTS whatsapp_customers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   phone_number VARCHAR(20) NOT NULL UNIQUE,
   full_name VARCHAR(255),

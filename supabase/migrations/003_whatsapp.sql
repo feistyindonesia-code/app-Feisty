@@ -1,6 +1,6 @@
 -- WhatsApp Integration Schema
 
-CREATE TABLE whatsapp_devices (
+CREATE TABLE IF NOT EXISTS whatsapp_devices (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE,
@@ -20,7 +20,7 @@ CREATE INDEX idx_whatsapp_devices_outlet_id ON whatsapp_devices(outlet_id);
 CREATE INDEX idx_whatsapp_devices_device_id ON whatsapp_devices(device_id);
 
 -- WhatsApp Messages Log
-CREATE TABLE whatsapp_messages (
+CREATE TABLE IF NOT EXISTS whatsapp_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   device_id UUID NOT NULL REFERENCES whatsapp_devices(id) ON DELETE CASCADE,
@@ -40,7 +40,7 @@ CREATE INDEX idx_whatsapp_messages_created_at ON whatsapp_messages(created_at);
 CREATE INDEX idx_whatsapp_messages_processed ON whatsapp_messages(is_processed);
 
 -- WhatsApp Conversations
-CREATE TABLE whatsapp_conversations (
+CREATE TABLE IF NOT EXISTS whatsapp_conversations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   device_id UUID NOT NULL REFERENCES whatsapp_devices(id) ON DELETE CASCADE,
@@ -60,7 +60,7 @@ CREATE INDEX idx_whatsapp_conversations_phone_number ON whatsapp_conversations(p
 CREATE INDEX idx_whatsapp_conversations_customer_id ON whatsapp_conversations(customer_id);
 
 -- Webhook signatures for validation
-CREATE TABLE webhook_signatures (
+CREATE TABLE IF NOT EXISTS webhook_signatures (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   webhook_secret VARCHAR(500) NOT NULL,

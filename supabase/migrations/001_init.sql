@@ -13,28 +13,55 @@ END
 $$;
 
 -- ============================================================================
--- ENUMS
+-- ENUMS (Idempotent - safe to run multiple times)
 -- ============================================================================
 
-CREATE TYPE user_role AS ENUM ('admin', 'outlet_manager', 'operator', 'customer');
-CREATE TYPE order_status AS ENUM (
-  'pending',
-  'confirmed',
-  'preparing',
-  'ready',
-  'on_delivery',
-  'delivered',
-  'cancelled',
-  'refunded'
-);
-CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
-CREATE TYPE payment_method AS ENUM ('cash', 'card', 'e_wallet', 'bank_transfer');
+DO $
+BEGIN
+  CREATE TYPE user_role AS ENUM ('admin', 'outlet_manager', 'operator', 'customer');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END
+$;
+
+DO $
+BEGIN
+  CREATE TYPE order_status AS ENUM (
+    'pending',
+    'confirmed',
+    'preparing',
+    'ready',
+    'on_delivery',
+    'delivered',
+    'cancelled',
+    'refunded'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END
+$;
+
+DO $
+BEGIN
+  CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END
+$;
+
+DO $
+BEGIN
+  CREATE TYPE payment_method AS ENUM ('cash', 'card', 'e_wallet', 'bank_transfer');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END
+$;
 
 -- ============================================================================
 -- ORGANIZATIONS & OUTLETS
 -- ============================================================================
 
-CREATE TABLE organizations (
+CREATE TABLE IF NOT EXISTS organizations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
   slug VARCHAR(100) NOT NULL UNIQUE,
@@ -45,7 +72,7 @@ CREATE TABLE organizations (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE outlets (
+CREATE TABLE IF NOT EXISTS outlets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
@@ -69,7 +96,7 @@ CREATE INDEX idx_outlets_coordinates ON outlets(latitude, longitude);
 -- USERS & AUTHENTICATION
 -- ============================================================================
 
-CREATE TABLE user_accounts (
+CREATE TABLE IF NOT EXISTS user_accounts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email VARCHAR(255) NOT NULL UNIQUE,
   phone VARCHAR(20),
@@ -93,7 +120,7 @@ CREATE INDEX idx_user_accounts_role ON user_accounts(role);
 -- PRODUCTS & CATEGORIES
 -- ============================================================================
 
-CREATE TABLE product_categories (
+CREATE TABLE IF NOT EXISTS product_categories (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
@@ -107,7 +134,7 @@ CREATE TABLE product_categories (
   UNIQUE(organization_id, slug)
 );
 
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   category_id UUID REFERENCES product_categories(id) ON DELETE SET NULL,
@@ -133,7 +160,7 @@ CREATE INDEX idx_products_available ON products(is_available);
 -- ORDERS
 -- ============================================================================
 
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   outlet_id UUID NOT NULL REFERENCES outlets(id) ON DELETE RESTRICT,
@@ -171,7 +198,7 @@ CREATE INDEX idx_orders_order_number ON orders(order_number);
 -- ORDER ITEMS
 -- ============================================================================
 
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   product_id UUID REFERENCES products(id) ON DELETE RESTRICT,
@@ -189,7 +216,7 @@ CREATE INDEX idx_order_items_product_id ON order_items(product_id);
 -- PAYMENTS
 -- ============================================================================
 
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -212,7 +239,7 @@ CREATE INDEX idx_payments_transaction_id ON payments(transaction_id);
 -- AUDIT LOGS
 -- ============================================================================
 
-CREATE TABLE audit_logs (
+CREATE TABLE IF NOT EXISTS audit_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
   user_id UUID REFERENCES user_accounts(id) ON DELETE SET NULL,

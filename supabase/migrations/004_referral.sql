@@ -1,6 +1,6 @@
 -- Referral System Schema
 
-CREATE TABLE referral_campaigns (
+CREATE TABLE IF NOT EXISTS referral_campaigns (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
@@ -20,7 +20,7 @@ CREATE INDEX idx_referral_campaigns_organization_id ON referral_campaigns(organi
 CREATE INDEX idx_referral_campaigns_active ON referral_campaigns(is_active);
 
 -- Referral Codes
-CREATE TABLE referral_codes (
+CREATE TABLE IF NOT EXISTS referral_codes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   campaign_id UUID NOT NULL REFERENCES referral_campaigns(id) ON DELETE CASCADE,
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -40,7 +40,7 @@ CREATE INDEX idx_referral_codes_code ON referral_codes(code);
 CREATE INDEX idx_referral_codes_active ON referral_codes(is_active);
 
 -- Referral Redemptions
-CREATE TABLE referral_redemptions (
+CREATE TABLE IF NOT EXISTS referral_redemptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   code_id UUID NOT NULL REFERENCES referral_codes(id) ON DELETE CASCADE,
   campaign_id UUID NOT NULL REFERENCES referral_campaigns(id) ON DELETE CASCADE,
@@ -62,7 +62,7 @@ CREATE INDEX idx_referral_redemptions_order_id ON referral_redemptions(order_id)
 CREATE INDEX idx_referral_redemptions_created_at ON referral_redemptions(created_at);
 
 -- Referral Rewards (Credits)
-CREATE TABLE referral_rewards (
+CREATE TABLE IF NOT EXISTS referral_rewards (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES user_accounts(id) ON DELETE CASCADE,
