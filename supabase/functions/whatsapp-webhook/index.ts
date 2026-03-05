@@ -9,7 +9,70 @@ import {
 // Gemini AI Integration
 // ============================================
 
-async function callGemini(prompt: string): Promise<string> {
+async function getConversationHistory(supabase: any, phoneNumber: string, limit: number = 5): Promise<string[]> {
+  try {
+    const { data: messages, error } = await supabase
+      .from("whatsapp_messages")
+      .select("message_text, direction, created_at")
+      .eq("phone_number", phoneNumber)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error || !messages) return [];
+
+    // Reverse to get chronological order
+    return messages.reverse().map(m => 
+      m.direction === "inbound" ? 
+        `Pelanggan: ${m.message_text}` : 
+        `Feisty AI: ${m.message_text}`
+    );
+  } catch (e) {
+    console.log("Error getting conversation history:", e);
+    return [];
+  }
+}
+
+async function getProducts(supabase: any, organizationId: string): Promise<string[]> {
+  try {
+    const { data: products, error } = await supabase
+      .from("products")
+      .select("name, price, description")
+      .eq("organization_id", organizationId)
+      .eq("is_available", true)
+      .limit(10);
+
+    if (error || !products) return [];
+    return products.map(p => `${p.name} - Rp${p.price.toLocaleString('id-ID')}${p.description ? ': ' + p.description : ''}`);
+  } catch (e) {
+    console.log("Error getting products:", e);
+    return [];
+  }
+}
+
+async function getBundles(supabase: any, organizationId: string): Promise<string[]> {
+  try {
+    const { data: bundles, error } = await supabase
+      .from("bundles")
+      .select("name, price, description")
+      .eq("organization_id", organizationId)
+      .eq("is_active", true)
+      .limit(5);
+
+    if (error || !bundles) return [];
+    return bundles.map(b => `${b.name} - Rp${b.price.toLocaleString('id-ID')}${b.description ? ': ' + b.description : ''}`);
+  } catch (e) {
+    console.log("Error getting bundles:", e);
+    return [];
+  }
+}
+
+async function callGemini(
+  prompt: string, 
+  conversationHistory: string[], 
+  products: string[],
+  bundles: string[],
+  customerName?: string
+): Promise<string> {
   const apiKey = Deno.env.get("GOOGLE_AI_API_KEY") || "";
   if (!apiKey) {
     console.error("Google AI API key not configured");
@@ -18,23 +81,50 @@ async function callGemini(prompt: string): Promise<string> {
 
   console.log("Gemini request prompt:", prompt);
 
-  const systemPrompt = `Kamu adalah AI assistant untuk Feisty Go International - bisnis food & beverage.
+  // Build context from database
+  let contextInfo = "";
+  if (products.length > 0) {
+    contextInfo += `\n\n📋 MENU TERSEDIA:\n${products.join('\n')}`;
+  }
+  if (bundles.length > 0) {
+    contextInfo += `\n\n🎁 PAKET KHUSUS:\n${bundles.join('\n')}`;
+  }
+  if (products.length === 0 && bundles.length === 0) {
+    contextInfo += "\n\n⚠️ Saat ini belum ada menu yang tersedia.";
+  }
 
-Tugas kamu:
-1. Responsif, friendly, dan membantu
-2. Jika customer bertanya tentang menu/paket, arahkan ke feisty.app/weborder
-3. Jika customer mau pesan, arahkan ke feisty.app/weborder
-4. Jika customer bertanya tentang referral, jelaskan manfaat berbagi link referral
-5. Jika customer komplain, sikap baik dan arahkan ke customer service
-6. Selalu gunakan emoji yang sesuai
-7. Respons dalam Bahasa Indonesia yang natural
+  const customerGreeting = customerName ? `, ${customerName}` : "";
 
-Info penting:
-- Nama bisnis: Feisty Go International  
-- Menu: Bisa lihat di feisty.app/weborder
-- Contact: WhatsApp ini
+  const systemPrompt = `Kamu adalah "Feisty AI Assistant" - asisten marketing yang ramah dan friendly untuk Feisty Go International (bisnis food & beverage).
 
-Jawab dengan singkat, max 2 kalimat, kecuali jika customer meminta detail.`;
+🎯 TUGAS UTAMAMU:
+1. Bersikap hangat, friendly, dan helpful - seperti teman baik yang siap membantu
+2. Jika pelanggan bertanya tentang menu/makanan/minuman, CEK menu yang tersedia di bawah. Katakan "ada" jika menu tersebut tersedia, atau "maaf belum ada" jika tidak tersedia.
+3. Jika pelanggan mau pesan, arahkan ke ${'https://feisty.my.id'}
+4. Jika pelanggan bertanya tentang promo/referral, jelaskan manfaat berbagi link referral
+5. Jika pelanggan komplain, sikap baik dan bantu alihkan ke customer service
+6. Selalu gunakan emoji yang sesuai tapi tidak berlebihan
+7. Respons dalam Bahasa Indonesia yang natural dan friendly
+
+📌 INFO PENTING:
+- Nama bisnis: Feisty Go International
+- Website: ${'https://feisty.my.id'}
+- Contact: WhatsApp ini${customerGreeting}
+${contextInfo}
+
+💬 Petunjuk percakapan:
+- Ingat apa yang sudah dibicarakan sebelumnya (lihat riwayat percakapan)
+- Jika pelanggan sudah memilih menu, bantu proses pemesanan
+- Jika pelanggan masih bingung, tawarkan rekomendasi
+- Jangan pernah bilang "saya tidak tahu" tanpa menawarkan solusi
+
+Jawab dengan singkat, max 2-3 kalimat, kecuali jika pelanggan meminta detail.`;
+
+  // Build conversation context
+  let fullPrompt = prompt;
+  if (conversationHistory.length > 0) {
+    fullPrompt = `Riwayat percakapan:\n${conversationHistory.join('\n')}\n\nSekarang pelanggan mengirim: ${prompt}`;
+  }
 
   try {
     const response = await fetch(
@@ -49,7 +139,7 @@ Jawab dengan singkat, max 2 kalimat, kecuali jika customer meminta detail.`;
           contents: [
             {
               role: "user",
-              parts: [{ text: prompt }]
+              parts: [{ text: fullPrompt }]
             }
           ],
           generationConfig: {
@@ -369,8 +459,19 @@ serve(async (req: Request) => {
       console.log("Updated customer name to:", nameMatch[1]);
     }
 
+    // Get conversation history, products, bundles
+    const conversationHistory = await getConversationHistory(supabase, normalizedFrom);
+    const products = organizationId ? await getProducts(supabase, organizationId) : [];
+    const bundles = organizationId ? await getBundles(supabase, organizationId) : [];
+    
     // Generate AI response
-    const responseText = await callGemini(messageText);
+    const responseText = await callGemini(
+      messageText,
+      conversationHistory,
+      products,
+      bundles,
+      customer.full_name
+    );
     console.log("AI Response:", responseText);
 
     // Store outbound message
