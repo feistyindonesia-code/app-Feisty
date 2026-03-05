@@ -82,20 +82,42 @@ CREATE INDEX IF NOT EXISTS idx_outlet_users_outlet ON outlet_users(outlet_id);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'weborder';
 
 -- 8. ADD ZONE DELIVERY SETTINGS
-CREATE TABLE IF NOT EXISTS delivery_zones (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-  outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE,
-  name VARCHAR(100) NOT NULL,
-  polygon GEOMETRY(POLYGON, 4326),
-  delivery_fee DECIMAL(12,2) DEFAULT 0,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- First check if delivery_zones table exists, add columns if missing
+DO $
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'delivery_zones') THEN
+    -- Create table if it doesn't exist
+    CREATE TABLE delivery_zones (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+      outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE,
+      name VARCHAR(100) NOT NULL,
+      polygon GEOMETRY(POLYGON, 4326),
+      delivery_fee DECIMAL(12,2) DEFAULT 0,
+      is_active BOOLEAN DEFAULT true,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    );
+  ELSE
+    -- Table exists, add columns if they don't exist
+    ALTER TABLE delivery_zones ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE;
+    ALTER TABLE delivery_zones ADD COLUMN IF NOT EXISTS outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE;
+    ALTER TABLE delivery_zones ADD COLUMN IF NOT EXISTS name VARCHAR(100);
+    ALTER TABLE delivery_zones ADD COLUMN IF NOT EXISTS polygon GEOMETRY(POLYGON, 4326);
+    ALTER TABLE delivery_zones ADD COLUMN IF NOT EXISTS delivery_fee DECIMAL(12,2) DEFAULT 0;
+    ALTER TABLE delivery_zones ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+  END IF;
+END
+$;
 
 CREATE INDEX IF NOT EXISTS idx_delivery_zones_org ON delivery_zones(organization_id);
 CREATE INDEX IF NOT EXISTS idx_delivery_zones_outlet ON delivery_zones(outlet_id);
-CREATE INDEX IF NOT EXISTS idx_delivery_zones_geom ON delivery_zones USING GIST(polygon);
+DO $
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_delivery_zones_geom') THEN
+    CREATE INDEX idx_delivery_zones_geom ON delivery_zones USING GIST(polygon);
+  END IF;
+END
+$;
 
 -- 9. CREATE OUTLET HOURS TABLE
 CREATE TABLE IF NOT EXISTS outlet_hours (
