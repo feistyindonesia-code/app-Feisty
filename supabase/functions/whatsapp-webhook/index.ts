@@ -143,8 +143,13 @@ async function getDeviceId(supabase: any): Promise<string | null> {
       .eq("is_active", true)
       .limit(1);
     
-    if (error || !devices || devices.length === 0) {
-      console.log("No device found, error:", error?.message);
+    if (error) {
+      console.log("Device query error:", error.message);
+      return null;
+    }
+    
+    if (!devices || devices.length === 0) {
+      console.log("No device found - no active devices in database");
       return null;
     }
     
@@ -163,8 +168,13 @@ async function getOrganizationId(supabase: any): Promise<string | null> {
       .eq("is_active", true)
       .limit(1);
     
-    if (error || !orgs || orgs.length === 0) {
-      console.log("No organization found:", error?.message);
+    if (error) {
+      console.log("Organization query error:", error.message);
+      return null;
+    }
+    
+    if (!orgs || orgs.length === 0) {
+      console.log("No organization found - no active organizations in database");
       return null;
     }
     
