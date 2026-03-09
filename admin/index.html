@@ -448,6 +448,13 @@
           body: JSON.stringify({ email, password })
         });
 
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Auth error:', response.status, errorText);
+          alert('Login gagal: ' + (response.status === 405 ? 'Method tidak diizinkan' : 'Terjadi kesalahan'));
+          return;
+        }
+
         const result = await response.json();
 
         if (result.success) {
@@ -461,7 +468,7 @@
         }
       } catch (error) {
         console.error('Login error:', error);
-        alert('Terjadi kesalahan. Silakan coba lagi.');
+        alert('Terjadi kesalahan koneksi. Silakan coba lagi.');
       }
     });
 
@@ -477,9 +484,19 @@
     // ============================================
     function showSection(section) {
       currentSection = section;
-      document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`section-${section}`).classList.remove('hidden');
+      
+      // Hide all sections
+      document.querySelectorAll('.section').forEach(el => {
+        if (el) el.classList.add('hidden');
+      });
+      
+      // Show target section
+      const targetSection = document.getElementById(`section-${section}`);
+      if (targetSection) {
+        targetSection.classList.remove('hidden');
+      }
 
+      // Load data for section
       if (section === 'products') loadProducts();
       if (section === 'categories') loadCategories();
       if (section === 'outlets') loadOutlets();
@@ -530,9 +547,26 @@
           `${SUPABASE_URL}/rest/v1/product_categories?select=*&order=sort_order`,
           { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
         );
+        
+        if (!response.ok) {
+          console.error('Categories API error:', response.status);
+          const container = document.getElementById('categories-list');
+          if (container) container.innerHTML = '<p class="text-gray-500">Error: ' + response.status + '</p>';
+          return;
+        }
+        
         categories = await response.json();
         
+        if (!Array.isArray(categories)) {
+          console.error('Categories response is not an array:', categories);
+          const container = document.getElementById('categories-list');
+          if (container) container.innerHTML = '<p class="text-gray-500">Error: ' + (categories.message || 'Invalid response') + '</p>';
+          return;
+        }
+        
         const container = document.getElementById('categories-list');
+        if (!container) return;
+        
         if (!categories || categories.length === 0) {
           container.innerHTML = '<p class="text-gray-500">Belum ada kategori</p>';
           return;
@@ -552,6 +586,8 @@
         `).join('');
       } catch (e) {
         console.error('Failed to load categories:', e);
+        const container = document.getElementById('categories-list');
+        if (container) container.innerHTML = '<p class="text-gray-500">Error: ' + e.message + '</p>';
       }
     }
 
@@ -561,9 +597,24 @@
           `${SUPABASE_URL}/rest/v1/products?select=*,categories:product_categories(name)&order=created_at.desc`,
           { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
         );
+        
+        if (!response.ok) {
+          console.error('Products API error:', response.status, response.statusText);
+          document.getElementById('products-table').innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Error loading products (${response.status})</td></tr>`;
+          return;
+        }
+        
         const products = await response.json();
         
+        if (!Array.isArray(products)) {
+          console.error('Products response is not an array:', products);
+          document.getElementById('products-table').innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Error: ${products.message || 'Invalid response'}</td></tr>`;
+          return;
+        }
+        
         const tbody = document.getElementById('products-table');
+        if (!tbody) return;
+        
         if (!products || products.length === 0) {
           tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Belum ada produk</td></tr>';
           return;
@@ -587,6 +638,10 @@
         `).join('');
       } catch (e) {
         console.error('Failed to load products:', e);
+        const tbody = document.getElementById('products-table');
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Error: ${e.message}</td></tr>`;
+        }
       }
     }
 
@@ -596,9 +651,26 @@
           `${SUPABASE_URL}/rest/v1/outlets?select=*&order=name`,
           { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
         );
+        
+        if (!response.ok) {
+          console.error('Outlets API error:', response.status);
+          const container = document.getElementById('outlets-grid');
+          if (container) container.innerHTML = `<p class="text-gray-500 col-span-full">Error: ${response.status}</p>`;
+          return;
+        }
+        
         const outlets = await response.json();
         
+        if (!Array.isArray(outlets)) {
+          console.error('Outlets response is not an array:', outlets);
+          const container = document.getElementById('outlets-grid');
+          if (container) container.innerHTML = `<p class="text-gray-500 col-span-full">Error: ${outlets.message || 'Invalid response'}</p>`;
+          return;
+        }
+        
         const container = document.getElementById('outlets-grid');
+        if (!container) return;
+        
         if (!outlets || outlets.length === 0) {
           container.innerHTML = '<p class="text-gray-500 col-span-full">Belum ada outlet</p>';
           return;
@@ -622,6 +694,8 @@
         `).join('');
       } catch (e) {
         console.error('Failed to load outlets:', e);
+        const container = document.getElementById('outlets-grid');
+        if (container) container.innerHTML = `<p class="text-gray-500 col-span-full">Error: ${e.message}</p>`;
       }
     }
 
@@ -631,9 +705,26 @@
           `${SUPABASE_URL}/rest/v1/user_accounts?select=*&order=created_at.desc`,
           { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
         );
+        
+        if (!response.ok) {
+          console.error('Users API error:', response.status);
+          const tbody = document.getElementById('users-table');
+          if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-red-500">Error: ${response.status}</td></tr>`;
+          return;
+        }
+        
         const users = await response.json();
         
+        if (!Array.isArray(users)) {
+          console.error('Users response is not an array:', users);
+          const tbody = document.getElementById('users-table');
+          if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-red-500">Error: ${users.message || 'Invalid response'}</td></tr>`;
+          return;
+        }
+        
         const tbody = document.getElementById('users-table');
+        if (!tbody) return;
+        
         if (!users || users.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Belum ada user</td></tr>';
           return;
@@ -660,6 +751,8 @@
         `).join('');
       } catch (e) {
         console.error('Failed to load users:', e);
+        const tbody = document.getElementById('users-table');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-red-500">Error: ${e.message}</td></tr>`;
       }
     }
 
