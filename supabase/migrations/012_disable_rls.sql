@@ -1,0 +1,34 @@
+-- ============================================
+-- Disable RLS for all tables
+-- Run this in Supabase SQL Editor
+-- ============================================
+
+-- Disable RLS on all tables
+ALTER TABLE organizations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE outlets DISABLE ROW LEVEL SECURITY;
+ALTER TABLE products DISABLE ROW LEVEL SECURITY;
+ALTER TABLE product_categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
+ALTER TABLE order_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE payments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_accounts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE customers DISABLE ROW LEVEL SECURITY;
+ALTER TABLE bot_settings DISABLE ROW LEVEL SECURITY;
+ALTER TABLE bot_conversations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE bot_messages DISABLE ROW LEVEL SECURITY;
+ALTER TABLE delivery_zones DISABLE ROW LEVEL SECURITY;
+ALTER TABLE area_requests DISABLE ROW LEVEL SECURITY;
+ALTER TABLE referrals DISABLE ROW LEVEL SECURITY;
+ALTER TABLE referral_rewards DISABLE ROW LEVEL SECURITY;
+ALTER TABLE bundles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE bundle_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE outlet_users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE outlet_hours DISABLE ROW LEVEL SECURITY;
+
+-- Verify RLS is disabled
+SELECT 
+  tablename,
+  rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public'
+ORDER BY tablename;
