@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order - Feisty</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../frontend/config.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -158,11 +159,8 @@
   </div>
 
   <script>
-    // ============================================
-    // CONFIGURATION
-    // ============================================
-    const SUPABASE_URL = "https://your-project.supabase.co";
-    const SUPABASE_ANON_KEY = "your-anon-key";
+    // CONFIGURATION is loaded from ../frontend/config.js
+    // No local config needed - uses SUPABASE_URL and SUPABASE_ANON_KEY from config.js
 
     // ============================================
     // STATE
