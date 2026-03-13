@@ -88,13 +88,20 @@ serve(async (req: Request) => {
         )
       `)
       .eq("email", email.toLowerCase())
-      .eq("is_active", true)
       .single();
 
     if (userError || !user) {
       return new Response(
         JSON.stringify(createErrorResponse("User not found or inactive", "USER_NOT_FOUND")),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        { status: 401, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+      );
+    }
+
+    // Check if user is active (allow login even if role is null for now)
+    if (user.is_active === false) {
+      return new Response(
+        JSON.stringify(createErrorResponse("User account is inactive", "USER_INACTIVE")),
+        { status: 401, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
       );
     }
 

@@ -40,9 +40,22 @@
   </header>
 
   <!-- Location Banner -->
-  <div id="location-banner" class="bg-feisty text-white px-4 py-2 text-center text-sm">
+  <div id="location-banner" class="bg-feisty text-white px-4 py-2 text-center text-sm flex items-center justify-center gap-2">
     <span id="location-text">📍 Mengeteksi lokasi Anda...</span>
-    <button onclick="detectLocation()" class="underline ml-2">Ubah</button>
+    <button onclick="showOutletSelector()" class="underline font-medium">Ubah</button>
+  </div>
+
+  <!-- Outlet Selector Modal -->
+  <div id="outlet-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg w-full max-w-md max-h-[80vh] overflow-y-auto">
+      <div class="p-4 border-b flex justify-between items-center">
+        <h2 class="text-xl font-bold">Pilih Outlet</h2>
+        <button onclick="closeOutletModal()" class="text-gray-500 text-2xl">&times;</button>
+      </div>
+      <div id="outlet-list" class="p-4 space-y-2">
+        <!-- Outlet options will be loaded here -->
+      </div>
+    </div>
   </div>
 
   <!-- Main Content -->
@@ -196,27 +209,73 @@
     let products = [];
     let categories = [];
     let cart = [];
+    let outlets = [];
+    let selectedOutlet = null;
     let userLocation = null;
     let deliveryFee = 0;
+    let zones = [];
 
     // ============================================
     // INITIALIZATION
     // ============================================
     document.addEventListener('DOMContentLoaded', () => {
-      loadProducts();
       loadOutlets();
     });
 
     // ============================================
     // DATA LOADING
     // ============================================
+    async function loadOutlets() {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/outlets?select=*&is_active=eq.true&is_open=eq.true&order=name`,
+          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+        );
+        outlets = await response.json();
+        
+        // Load delivery zones
+        await loadZones();
+        
+        // Detect location after loading outlets
+        detectLocation();
+      } catch (e) {
+        console.error('Failed to load outlets:', e);
+      }
+    }
+
+    async function loadZones() {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/delivery_zones?select=*&is_active=eq.true`,
+          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+        );
+        zones = await response.json();
+      } catch (e) {
+        console.error('Failed to load zones:', e);
+        zones = [];
+      }
+    }
+
     async function loadProducts() {
       try {
+        // Load all available products
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/products?select=*,categories:product_categories(name,slug)&is_available=eq.true&order=name`,
           { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
         );
-        products = await response.json();
+        let allProducts = await response.json();
+        
+        // Filter products: show global products + products from selected outlet
+        if (selectedOutlet) {
+          products = allProducts.filter(p => 
+            p.is_global === true || p.is_global === 'true' || 
+            p.outlet_id === selectedOutlet.id || 
+            !p.outlet_id
+          );
+        } else {
+          // Show all products if no outlet selected
+          products = allProducts;
+        }
         
         renderCategories();
         renderProducts(products);
@@ -224,26 +283,6 @@
         console.error('Failed to load products:', e);
         document.getElementById('products').innerHTML = '<p class="text-center text-gray-500 col-span-full">Gagal memuat produk</p>';
       }
-    }
-
-    async function loadOutlets() {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/outlets?select=*&is_active=eq.true&is_open=eq.true`,
-          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
-        );
-        const outlets = await response.json();
-        
-        if (outlets && outlets.length > 0) {
-          // Use first outlet as default
-          document.getElementById('location-text').textContent = `📍 Outlet aktif ditemukan`;
-          deliveryFee = 5000; // Default delivery fee
-        }
-      } catch (e) {
-        console.error('Failed to load outlets:', e);
-      }
-      
-      detectLocation();
     }
 
     // ============================================
@@ -259,18 +298,114 @@
               lat: position.coords.latitude,
               lng: position.coords.longitude
             };
-            document.getElementById('location-text').textContent = `📍 Lokasi: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
+            
+            // Find nearest outlet and calculate delivery fee
+            findNearestOutlet(position.coords.latitude, position.coords.longitude);
+            
             document.getElementById('checkout-lat').value = position.coords.latitude;
             document.getElementById('checkout-lng').value = position.coords.longitude;
           },
           (error) => {
             console.error('Geolocation error:', error);
             document.getElementById('location-text').textContent = '📍 Lokasi tidak terdeteksi - akan menggunakan outlet terdekat';
+            // Use first outlet as fallback
+            if (outlets && outlets.length > 0) {
+              selectOutlet(outlets[0]);
+            }
+            loadProducts();
           }
         );
       } else {
         document.getElementById('location-text').textContent = '📍 Geolocation tidak didukung';
+        // Use first outlet as fallback
+        if (outlets && outlets.length > 0) {
+          selectOutlet(outlets[0]);
+        }
+        loadProducts();
       }
+    }
+
+    function findNearestOutlet(lat, lng) {
+      if (!outlets || outlets.length === 0) {
+        document.getElementById('location-text').textContent = '📍 Tidak ada outlet aktif';
+        return;
+      }
+
+      // Check if user is in a delivery zone
+      let nearestOutlet = null;
+      let minDistance = Infinity;
+      let foundZone = null;
+
+      for (const outlet of outlets) {
+        // Calculate distance to outlet
+        const distance = calculateDistance(lat, lng, outlet.latitude, outlet.longitude);
+        
+        // Find zone that covers this location
+        const zone = zones.find(z => 
+          z.outlet_id === outlet.id && 
+          calculateDistance(lat, lng, z.center_latitude, z.center_longitude) <= z.radius_km
+        );
+        
+        if (zone && distance < minDistance) {
+          minDistance = distance;
+          nearestOutlet = outlet;
+          foundZone = zone;
+        }
+      }
+
+      if (nearestOutlet && foundZone) {
+        selectOutlet(nearestOutlet, foundZone.delivery_fee);
+      } else {
+        // No zone found, use nearest outlet with default fee
+        for (const outlet of outlets) {
+          const distance = calculateDistance(lat, lng, outlet.latitude, outlet.longitude);
+          if (distance < minDistance) {
+            minDistance = distance;
+            nearestOutlet = outlet;
+          }
+        }
+        
+        if (nearestOutlet) {
+          // Check if within 10km of outlet
+          if (minDistance <= 10) {
+            selectOutlet(nearestOutlet, 5000); // Default 5km delivery fee
+          } else {
+            document.getElementById('location-text').textContent = '📍 Lokasi di luar jangkauan outlet';
+            alert('Maaf, lokasi Anda terlalu jauh dari outlet terdekat (lebih dari 10km). Silakan pilih outlet lain atau hubungi kami.');
+          }
+        }
+      }
+    }
+
+    function selectOutlet(outlet, fee = 5000) {
+      selectedOutlet = outlet;
+      deliveryFee = fee;
+      
+      document.getElementById('location-text').textContent = `📍 ${outlet.name} - ${formatCurrency(fee)} pengiriman`;
+      
+      // Reload products for this outlet
+      loadProducts();
+      
+      // Update cart if open
+      if (cart.length > 0) {
+        updateCartUI();
+      }
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      // Haversine formula
+      const R = 6371; // Earth's radius in km
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    function toRad(deg) {
+      return deg * (Math.PI/180);
     }
 
     // ============================================
@@ -506,6 +641,41 @@
       document.getElementById('success-modal').classList.add('hidden');
       document.getElementById('success-modal').classList.remove('flex');
       window.location.reload();
+    }
+
+    // ============================================
+    // OUTLET SELECTOR
+    // ============================================
+    function showOutletSelector() {
+      const container = document.getElementById('outlet-list');
+      
+      if (!outlets || outlets.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center">Tidak ada outlet tersedia</p>';
+      } else {
+        container.innerHTML = outlets.map(o => `
+          <button onclick="selectOutletById('${o.id}')" class="w-full p-3 border rounded-lg text-left hover:bg-orange-50 ${selectedOutlet?.id === o.id ? 'border-feisty bg-orange-50' : ''}">
+            <div class="font-medium">${o.name}</div>
+            <div class="text-sm text-gray-500">${o.address || 'Alamat tidak tersedia'}</div>
+            ${o.opening_time && o.closing_time ? `<div class="text-sm text-gray-500">Buka: ${o.opening_time} - ${o.closing_time}</div>` : ''}
+          </button>
+        `).join('');
+      }
+      
+      document.getElementById('outlet-modal').classList.remove('hidden');
+      document.getElementById('outlet-modal').classList.add('flex');
+    }
+
+    function closeOutletModal() {
+      document.getElementById('outlet-modal').classList.add('hidden');
+      document.getElementById('outlet-modal').classList.remove('flex');
+    }
+
+    function selectOutletById(outletId) {
+      const outlet = outlets.find(o => o.id === outletId);
+      if (outlet) {
+        selectOutlet(outlet, 5000); // Default fee when manually selected
+        closeOutletModal();
+      }
     }
 
     // ============================================
