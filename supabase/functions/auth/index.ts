@@ -129,7 +129,12 @@ serve(async (req: Request) => {
       .eq("user_id", user.id)
       .eq("is_active", true);
 
-    // Build response
+    // Build response with role-based redirect
+    let redirectUrl = "/admin";
+    if (user.role === "kasir" || user.role === "outlet_admin") {
+      redirectUrl = "/outlet";
+    }
+
     const responseData = {
       user: {
         id: user.id,
@@ -139,6 +144,7 @@ serve(async (req: Request) => {
         role: user.role,
         organization_id: user.organization_id,
         organization: user.organizations,
+        outlet_id: user.outlet_id,
       },
       primary_outlet: user.outlets,
       assigned_outlets: outletAssignments?.map((oa: any) => ({
@@ -156,6 +162,7 @@ serve(async (req: Request) => {
           can_manage_orders: oa.can_manage_orders,
         },
       })) || [],
+      redirect_url: redirectUrl,
     };
 
     return new Response(

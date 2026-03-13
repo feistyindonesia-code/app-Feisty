@@ -225,10 +225,11 @@
 
   <script>
     // ============================================
-    // CONFIGURATION
+    // CONFIGURATION - Load from config.js
     // ============================================
-    const SUPABASE_URL = "https://your-project.supabase.co";
-    const SUPABASE_ANON_KEY = "your-anon-key";
+    // Wait for config.js to load
+    const SUPABASE_URL = window.SUPABASE_URL || "https://cvjpgicqruzolwtpiksa.supabase.co";
+    const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2anBnaWNxcnV6b2x3dHBpa3NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzMzk5ODgsImV4cCI6MjA4NzkxNTk4OH0.sfWuGHiSSN422Smqy6mgRxuq-3FdPns0lWFsE_zqgwM";
     const AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/auth`;
 
     // ============================================

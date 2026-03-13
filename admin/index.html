@@ -480,6 +480,15 @@
           document.getElementById('user-name').textContent = currentUser.user.full_name || currentUser.user.email;
           document.getElementById('login-section').classList.add('hidden');
           document.getElementById('dashboard-section').classList.remove('hidden');
+          
+          // Redirect based on role
+          const role = currentUser.user.role;
+          if (role === 'kasir' || role === 'outlet_admin') {
+            // Redirect to outlet dashboard
+            window.location.href = '/outlet/';
+            return;
+          }
+          
           loadDashboard();
         } else {
           alert('Login gagal: ' + (result.error?.message || 'Unknown error'));
