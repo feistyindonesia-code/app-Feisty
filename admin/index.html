@@ -794,10 +794,11 @@
       const data = {
         name: document.getElementById('product-name').value,
         emoji: document.getElementById('product-emoji').value,
-        category_id: document.getElementById('product-category').value,
+        category_id: document.getElementById('product-category').value || null,
         price: parseFloat(document.getElementById('product-price').value),
         description: document.getElementById('product-description').value,
-        is_available: document.getElementById('product-available').checked
+        is_available: document.getElementById('product-available').checked,
+        organization_id: '00000000-0000-0000-0000-000000000001' // Default org
       };
 
       try {
@@ -809,7 +810,8 @@
           headers: {
             'Content-Type': 'application/json',
             'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Prefer': 'return=minimal'
           },
           body: JSON.stringify(data)
         });
@@ -818,7 +820,8 @@
           closeModal('product-modal');
           loadProducts();
         } else {
-          alert('Gagal menyimpan produk');
+          const errorText = await response.text();
+          alert('Gagal menyimpan produk: ' + (errorText || response.statusText));
         }
       } catch (e) {
         console.error(e);
@@ -858,28 +861,36 @@
     document.getElementById('category-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('category-id').value;
+      const name = document.getElementById('category-name').value;
       const data = {
-        name: document.getElementById('category-name').value,
-        slug: document.getElementById('category-slug').value || document.getElementById('category-name').value.toLowerCase().replace(/\s+/g, '-'),
-        sort_order: parseInt(document.getElementById('category-sort').value) || 0
+        name: name,
+        slug: document.getElementById('category-slug').value || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+        sort_order: parseInt(document.getElementById('category-sort').value) || 0,
+        organization_id: '00000000-0000-0000-0000-000000000001' // Default org
       };
 
       try {
         const method = id ? 'PATCH' : 'POST';
         const url = id ? `${SUPABASE_URL}/rest/v1/product_categories?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/product_categories`;
         
-        await fetch(url, {
+        const response = await fetch(url, {
           method,
           headers: {
             'Content-Type': 'application/json',
             'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Prefer': 'return=minimal'
           },
           body: JSON.stringify(data)
         });
 
-        closeModal('category-modal');
-        loadCategories();
+        if (response.ok) {
+          closeModal('category-modal');
+          loadCategories();
+        } else {
+          const errorText = await response.text();
+          alert('Gagal menyimpan kategori: ' + (errorText || response.statusText));
+        }
       } catch (e) {
         alert('Error: ' + e.message);
       }
@@ -926,35 +937,51 @@
     document.getElementById('outlet-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('outlet-id').value;
+      
+      // Generate slug from name
+      const name = document.getElementById('outlet-name').value;
+      const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      
       const data = {
-        name: document.getElementById('outlet-name').value,
+        name: name,
+        slug: slug,
         address: document.getElementById('outlet-address').value,
         latitude: parseFloat(document.getElementById('outlet-latitude').value) || 0,
         longitude: parseFloat(document.getElementById('outlet-longitude').value) || 0,
-        whatsapp_number: document.getElementById('outlet-whatsapp').value,
-        opening_time: document.getElementById('outlet-open').value,
-        closing_time: document.getElementById('outlet-close').value,
+        phone: document.getElementById('outlet-whatsapp').value,
+        opening_time: document.getElementById('outlet-open').value || null,
+        closing_time: document.getElementById('outlet-close').value || null,
         is_active: document.getElementById('outlet-active').checked,
-        is_open: document.getElementById('outlet-open-status').checked
+        is_open: document.getElementById('outlet-open-status').checked,
+        organization_id: '00000000-0000-0000-0000-000000000001' // Default org
       };
 
       try {
         const method = id ? 'PATCH' : 'POST';
         const url = id ? `${SUPABASE_URL}/rest/v1/outlets?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/outlets`;
         
-        await fetch(url, {
+        const response = await fetch(url, {
           method,
           headers: {
             'Content-Type': 'application/json',
             'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Prefer': 'return=minimal'
           },
           body: JSON.stringify(data)
         });
 
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Outlet save error:', response.status, errorText);
+          alert('Gagal menyimpan outlet: ' + (errorText || response.statusText));
+          return;
+        }
+
         closeModal('outlet-modal');
         loadOutlets();
       } catch (e) {
+        console.error('Error:', e);
         alert('Error: ' + e.message);
       }
     });
