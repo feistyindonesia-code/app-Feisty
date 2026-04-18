@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ - Feisty</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            feisty: '#D70909',
+            cream: '#FFF8F3',
+            warm: '#FDE8E8'
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background:#FFF8F3; }
+    h1,h2,h3 { font-family: 'Space Grotesk', sans-serif; }
+    .food-pattern {
+      background-image: radial-gradient(rgba(215,9,9,0.05) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+  </style>
+</head>
+<body class="text-gray-800">
+
+<!-- HEADER -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+    <a href="/" class="text-2xl font-bold text-feisty">FEISTY</a>
+    <nav class="hidden md:flex space-x-6">
+      <a href="/" class="text-gray-600 hover:text-feisty">Beranda</a>
+      <a href="order/" class="text-gray-600 hover:text-feisty">Pesan</a>
+      <a href="faq.html" class="text-feisty font-medium">FAQ</a>
+      <a href="terms.html" class="text-gray-600 hover:text-feisty">Syarat & Ketentuan</a>
+      <a href="refund.html" class="text-gray-600 hover:text-feisty">Kebijakan Refund</a>
+      <a href="contact.html" class="text-gray-600 hover:text-feisty">Kontak</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="py-16 px-6 max-w-4xl mx-auto text-center">
+  <h1 class="text-4xl font-bold mb-6">Pertanyaan yang Sering Ditanyakan</h1>
+  <p class="text-lg text-gray-600">Temukan jawaban untuk pertanyaan umum tentang layanan Feisty</p>
+</section>
+
+<!-- FAQ CONTENT -->
+<section class="px-6 max-w-4xl mx-auto pb-20">
+  <div class="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+
+    <div class="border-b pb-4">
+      <h3 class="text-xl font-bold mb-3 text-feisty">🛒 Pemesanan & Delivery</h3>
+      <div class="space-y-4">
+        <div>
+          <h4 class="font-semibold mb-2">Bagaimana cara memesan di Feisty?</h4>
+          <p class="text-gray-600">Kunjungi halaman "Pesan Sekarang" dan masukkan lokasi Anda. Sistem akan mencari outlet terdekat yang tersedia. Pilih menu yang diinginkan, masukkan detail pengiriman, dan selesaikan pembayaran.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Berapa lama waktu pengiriman?</h4>
+          <p class="text-gray-600">Waktu pengiriman tergantung pada jarak dan kondisi lalu lintas. Rata-rata 30-45 menit untuk jarak kurang dari 5km. Anda akan menerima update status via WhatsApp.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Apakah ada biaya ongkos kirim?</h4>
+          <p class="text-gray-600">Ya, biaya ongkos kirim bervariasi tergantung lokasi Anda. Sistem akan menghitung otomatis saat Anda memasukkan alamat pengiriman.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Bisakah saya pickup sendiri?</h4>
+          <p class="text-gray-600">Ya, Anda bisa memilih opsi "Takeaway" saat checkout. Silakan ambil pesanan di outlet terdekat sesuai waktu yang disepakati.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-b pb-4">
+      <h3 class="text-xl font-bold mb-3 text-feisty">💳 Pembayaran</h3>
+      <div class="space-y-4">
+        <div>
+          <h4 class="font-semibold mb-2">Metode pembayaran apa yang tersedia?</h4>
+          <p class="text-gray-600">Kami menerima pembayaran tunai (COD), QRIS, transfer bank, dan kartu kredit/debit melalui gateway pembayaran terintegrasi.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Apakah pembayaran online aman?</h4>
+          <p class="text-gray-600">Ya, semua transaksi online dilindungi dengan enkripsi SSL dan diproses melalui gateway pembayaran terpercaya.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Kapan pembayaran didebit?</h4>
+          <p class="text-gray-600">Untuk pembayaran online, dana akan didebit saat pesanan dikonfirmasi. Untuk COD, pembayaran dilakukan saat barang diterima.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-b pb-4">
+      <h3 class="text-xl font-bold mb-3 text-feisty">🍔 Menu & Produk</h3>
+      <div class="space-y-4">
+        <div>
+          <h4 class="font-semibold mb-2">Apakah menu berbeda di setiap outlet?</h4>
+          <p class="text-gray-600">Menu utama sama di semua outlet, namun beberapa outlet mungkin memiliki menu spesial atau ketersediaan yang berbeda tergantung stok lokal.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Apakah ada menu vegetarian/vegan?</h4>
+          <p class="text-gray-600">Ya, kami memiliki berbagai pilihan menu vegetarian dan vegan. Lihat kategori menu atau tanyakan pada kasir untuk opsi yang tersedia.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Bisakah saya request perubahan bahan?</h4>
+          <p class="text-gray-600">Untuk perubahan minor seperti tambah/kurang pedas, kami bisa mengakomodasi. Untuk perubahan bahan utama, silakan hubungi outlet terdekat.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-b pb-4">
+      <h3 class="text-xl font-bold mb-3 text-feisty">📞 Dukungan & Kontak</h3>
+      <div class="space-y-4">
+        <div>
+          <h4 class="font-semibold mb-2">Bagaimana cara menghubungi dukungan?</h4>
+          <p class="text-gray-600">Anda bisa menghubungi kami melalui WhatsApp di nomor yang tertera di halaman kontak, atau email ke support@feisty.id</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Apakah ada layanan pelanggan 24/7?</h4>
+          <p class="text-gray-600">Layanan WhatsApp tersedia selama jam operasional outlet. Untuk keluhan mendesak di luar jam operasional, hubungi nomor emergency.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Bagaimana cara memberikan feedback?</h4>
+          <p class="text-gray-600">Anda bisa memberikan rating dan komentar setelah menerima pesanan, atau langsung hubungi kami melalui WhatsApp.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="text-xl font-bold mb-3 text-feisty">⚙️ Akun & Pengaturan</h3>
+      <div class="space-y-4">
+        <div>
+          <h4 class="font-semibold mb-2">Apakah saya perlu membuat akun?</h4>
+          <p class="text-gray-600">Tidak wajib, namun membuat akun memungkinkan Anda menyimpan alamat, melihat riwayat pesanan, dan mendapatkan promo eksklusif.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Bagaimana cara mengubah data pribadi?</h4>
+          <p class="text-gray-600">Login ke akun Anda dan akses menu "Profil" untuk mengubah informasi pribadi, alamat, dan preferensi.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">Apakah data pribadi saya aman?</h4>
+          <p class="text-gray-600">Ya, kami menjaga kerahasiaan data Anda sesuai dengan kebijakan privasi dan regulasi PDPSA (Perlindungan Data Pribadi).</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="text-center mt-8">
+    <p class="text-gray-600">Masih ada pertanyaan? <a href="contact.html" class="text-feisty font-medium">Hubungi kami</a></p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-white border-t py-10 text-center text-gray-500">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="grid md:grid-cols-4 gap-6 mb-6">
+      <div>
+        <h4 class="font-bold text-gray-800 mb-2">Feisty</h4>
+        <p class="text-sm">Makanan enak. Momen hangat.</p>
+      </div>
+      <div>
+        <h4 class="font-bold text-gray-800 mb-2">Layanan</h4>
+        <a href="order/" class="block text-sm hover:text-feisty">Pesan Online</a>
+        <a href="faq.html" class="block text-sm hover:text-feisty">FAQ</a>
+        <a href="contact.html" class="block text-sm hover:text-feisty">Kontak</a>
+      </div>
+      <div>
+        <h4 class="font-bold text-gray-800 mb-2">Perusahaan</h4>
+        <a href="terms.html" class="block text-sm hover:text-feisty">Syarat & Ketentuan</a>
+        <a href="refund.html" class="block text-sm hover:text-feisty">Kebijakan Refund</a>
+        <a href="privacy.html" class="block text-sm hover:text-feisty">Privasi</a>
+      </div>
+      <div>
+        <h4 class="font-bold text-gray-800 mb-2">Kontak</h4>
+        <p class="text-sm">WhatsApp: +62 812-3456-7890</p>
+        <p class="text-sm">Email: info@feisty.id</p>
+        <p class="text-sm">Jakarta, Indonesia</p>
+      </div>
+    </div>
+    <p>© 2026 FEISTY. Made with ❤️</p>
+  </div>
+</footer>
+
+</body>
+</html>
